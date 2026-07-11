@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account — CottonGreen AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+</head>
+<body class="auth-body">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <a href="{{ url_for('auth.register') }}" class="auth-logo">
+          <span>🌿</span>
+          <span>Cotton<span class="accent">Green</span> AI</span>
+        </a>
+        <h1 class="auth-title">Create account</h1>
+        <p class="auth-subtitle">Join CottonGreen AI to start diagnosing cotton leaf diseases</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-list">
+          {% for cat, msg in messages %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" autocomplete="on" id="regForm">
+          <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-input" type="text" id="username" name="username"
+                   value="{{ username|default('') }}" placeholder="john_doe"
+                   required autofocus autocomplete="username" pattern="[A-Za-z0-9_]{3,30}" />
+            <div class="field-hint" id="usernameHint"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-input" type="email" id="email" name="email"
+                   value="{{ email|default('') }}" placeholder="john@example.com"
+                   required autocomplete="email" />
+          </div>
+          <div class="form-group" style="position:relative">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-input" type="password" id="password" name="password"
+                   placeholder="Min 8 characters" required autocomplete="new-password" />
+            <button type="button" class="toggle-pw" onclick="togglePw('password',this)" aria-label="Toggle password">👁</button>
+            <div class="strength-track"><div class="strength-bar" id="strengthBar"></div></div>
+            <div class="strength-hint" id="strengthHint"></div>
+          </div>
+          <div class="form-group" style="position:relative">
+            <label class="form-label" for="confirm_password">Confirm Password</label>
+            <input class="form-input" type="password" id="confirm_password" name="confirm_password"
+                   placeholder="Repeat password" required autocomplete="new-password" />
+            <button type="button" class="toggle-pw" onclick="togglePw('confirm_password',this)" aria-label="Toggle password">👁</button>
+            <div class="field-hint" id="confirmHint"></div>
+          </div>
+          <ul class="pw-checks" id="pwChecks">
+            <li id="chkLen"><span class="chk-icon">○</span> At least 8 characters</li>
+            <li id="chkUpper"><span class="chk-icon">○</span> One uppercase letter</li>
+            <li id="chkNum"><span class="chk-icon">○</span> One number</li>
+            <li id="chkMatch"><span class="chk-icon">○</span> Passwords match</li>
+          </ul>
+          <button type="submit" class="btn-auth" id="regBtn">Create Account</button>
+        </form>
+
+        <div class="auth-divider">or</div>
+        <p class="auth-switch">
+          Already have an account?
+          <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function togglePw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈'}
+  const pw=document.getElementById('password'),cpw=document.getElementById('confirm_password');
+  const bar=document.getElementById('strengthBar'),hint=document.getElementById('strengthHint');
+  function checkPw(){
+    const v=pw.value,c=cpw.value;
+    let s=0;if(v.length>=8)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;
+    const w=[0,25,50,75,100][s],col=['var(--red)','var(--red)','var(--gold)','var(--accent)','var(--cyan)'][s];
+    bar.style.width=w+'%';bar.style.background=col;
+    const labels=['','Weak','Fair','Good','Strong'];hint.textContent=labels[s];hint.style.color=col;
+    const ok='●',no='○';
+    toggle('chkLen',v.length>=8);toggle('chkUpper',/[A-Z]/.test(v));toggle('chkNum',/[0-9]/.test(v));toggle('chkMatch',v&&v===c);
+    document.getElementById('confirmHint').textContent=c&&v!==c?'Passwords do not match':'';
+  }
+  function toggle(id,ok){const el=document.getElementById(id);el.classList.toggle('ok',ok);el.querySelector('.chk-icon').textContent=ok?'●':'○'}
+  pw.addEventListener('input',checkPw);cpw.addEventListener('input',checkPw);
+  document.getElementById('regForm').addEventListener('submit',function(){
+    document.getElementById('regBtn').disabled=true;document.getElementById('regBtn').textContent='Creating…';
+  });
+  </script>
+</body>
+</html>

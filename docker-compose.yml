@@ -1,0 +1,93 @@
+# ═══════════════════════════════════════════════════════════════
+# CottonGreen AI — Docker Compose (Full Stack)
+# Services: app, postgres, redis, nginx
+# ═══════════════════════════════════════════════════════════════
+
+version: "3.9"
+
+services:
+  # ── Flask + Gunicorn App ─────────────────────────────────────
+  app:
+    build: .
+    container_name: cottongreen-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://cottongreen:${DB_PASSWORD:-securepass123}@postgres:5432/cottongreen
+      - REDIS_URL=redis://redis:6379/0
+      - USE_PROXYFIX=true
+    volumes:
+      - model_data:/app/model
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - cottongreen-net
+
+  # ── PostgreSQL Database ──────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: cottongreen-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cottongreen
+      POSTGRES_USER: cottongreen
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-securepass123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cottongreen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cottongreen-net
+
+  # ── Redis Cache ──────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: cottongreen-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cottongreen-net
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: cottongreen-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./static:/app/static:ro
+      # Uncomment for SSL:
+      # - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+    networks:
+      - cottongreen-net
+
+volumes:
+  postgres_data:
+  model_data:
+
+networks:
+  cottongreen-net:
+    driver: bridge

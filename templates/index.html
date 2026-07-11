@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CottonGreen AI — Cotton Leaf Disease Detection</title>
+  <meta name="description" content="AI-powered cotton leaf disease detection. Upload a leaf image for instant diagnosis and treatment recommendations." />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;700;800&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ── HEADER ──────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="{{ url_for('index') }}" class="logo">
+        <span class="logo-icon">🌿</span>
+        <span>Cotton<span class="accent">Green</span> AI</span>
+      </a>
+
+      <nav class="main-nav">
+        <button type="button" onclick="location.href='#analyze'" class="nav-link" data-i18n="nav_diagnose">Diagnose</button>
+        <button type="button" onclick="location.href='#history'" class="nav-link" data-i18n="nav_history">History</button>
+        <button type="button" onclick="location.href='#diseases'" class="nav-link" data-i18n="nav_diseases">Diseases</button>
+        <button type="button" onclick="location.href='#about'" class="nav-link" data-i18n="nav_about">About</button>
+      </nav>
+
+      <div class="header-actions">
+        <!-- Model status -->
+        <div class="model-status">
+          <span class="status-dot" id="modelDot"></span>
+          <span id="modelStatus" data-i18n="model_ready">Ready</span>
+        </div>
+
+        <!-- Language -->
+        <select id="langSelect" class="lang-select" aria-label="Select Language">
+          <option value="en">EN</option>
+          <option value="te">తెలుగు</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+
+        <!-- User dropdown -->
+        <div class="user-dropdown-wrap" id="userDropdownWrap">
+          <button class="avatar-btn" id="avatarBtn" aria-haspopup="true" aria-expanded="false">
+            {{ current_user.username[0].upper() }}
+          </button>
+          <div class="user-dropdown" id="userDropdown" style="display:none">
+            <div class="dropdown-header">
+              <strong>{{ current_user.username }}</strong>
+              <span>{{ current_user.email }}</span>
+            </div>
+            <div class="dropdown-sep"></div>
+            <button type="button" onclick="location.href='{{ url_for('dashboard') }}'" class="dropdown-link" data-i18n="nav_dashboard">Dashboard</button>
+            <div class="dropdown-sep"></div>
+            <button type="button" onclick="location.href='{{ url_for('auth.logout') }}'" class="dropdown-link danger" data-i18n="nav_logout">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── HERO ────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-eyebrow" data-i18n="hero_tag">Deep Learning · EfficientNetB3</p>
+      <h1 class="hero-title">
+        <span data-i18n="hero_title_1">Cotton Leaf</span><br>
+        <span class="accent" data-i18n="hero_title_2">Disease Detection</span>
+      </h1>
+      <p class="hero-sub" data-i18n="hero_sub">
+        Upload a cotton leaf photo to receive an AI-powered disease diagnosis with confidence scores and treatment recommendations.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-num">7</span>
+          <span class="stat-label" data-i18n="stat_classes">Disease Classes</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">&gt;95%</span>
+          <span class="stat-label" data-i18n="stat_accuracy">Test Accuracy</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" data-i18n="stat_realtime">Real-time</span>
+          <span class="stat-label" data-i18n="stat_prediction">Prediction</span>
+        </div>
+      </div>
+      <a href="#analyze" class="btn-primary" data-i18n="btn_start">Start Diagnosis →</a>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── ANALYZE ─────────────────────────────────────────────── -->
+  <section class="upload-section" id="analyze">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-label" data-i18n="upload_label">Diagnosis</p>
+        <h2 class="section-title" data-i18n="upload_title">Analyze a Leaf</h2>
+        <p class="section-desc" data-i18n="upload_subtitle">Drag and drop or click to upload a cotton leaf image</p>
+      </div>
+
+      <div class="upload-layout">
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Upload image">
+          <div id="dropContent">
+            <div class="drop-icon-wrap">📷</div>
+            <p class="drop-main" data-i18n="drop_text_strong">Drop your image here</p>
+            <p class="drop-sub" data-i18n="drop_text_span">or click to browse files</p>
+            <div class="drop-formats" data-i18n="drop_hint">JPG · PNG · WebP · Max 16 MB</div>
+            <div style="margin-top:4px">
+              <button class="btn-camera-sm" id="startCameraBtn" data-i18n="btn_camera">Use Camera</button>
+            </div>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" hidden />
+
+          <!-- Camera view -->
+          <div id="cameraWrap" style="display:none;width:100%;position:absolute;inset:0">
+            <video id="cameraVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video>
+            <div class="camera-controls">
+              <button class="btn-capture-main" id="captureBtn" data-i18n="btn_capture">Capture</button>
+              <button class="btn-close-cam" id="closeCameraBtn" data-i18n="btn_close_camera">Cancel</button>
+            </div>
+          </div>
+          <canvas id="cameraCanvas" style="display:none"></canvas>
+
+          <!-- Preview -->
+          <div class="preview-wrap" id="previewWrap" style="display:none">
+            <img id="previewImg" src="" alt="Leaf preview" />
+            <button class="preview-remove" id="removeBtn" title="Remove image">✕</button>
+          </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div class="action-panel">
+          <!-- Idle -->
+          <div class="idle-state" id="panelIdle">
+            <div class="idle-icon">🌱</div>
+            <p class="idle-text" data-i18n="idle_text">Select a cotton leaf image to begin analysis</p>
+            <ul class="tips-list">
+              <li><span class="tip-dot"></span><span data-i18n="tip_1">Clear, well-lit images work best</span></li>
+              <li><span class="tip-dot"></span><span data-i18n="tip_2">Leaf should fill most of the frame</span></li>
+              <li><span class="tip-dot"></span><span data-i18n="tip_3">Avoid blurry or dark photos</span></li>
+              <li><span class="tip-dot"></span><span data-i18n="tip_4">Phone camera works well</span></li>
+            </ul>
+          </div>
+
+          <!-- Ready -->
+          <div class="ready-state" id="panelReady" style="display:none">
+            <div class="ready-icon">✅</div>
+            <p class="ready-text" data-i18n="ready_text">Image ready for analysis</p>
+            <button class="btn-analyze" id="analyzeBtn">
+              <span class="btn-text" data-i18n="btn_analyze">Analyze Leaf</span>
+              <span class="btn-loader" style="display:none">
+                <span class="spinner"></span>
+                <span data-i18n="btn_analyzing">Analyzing…</span>
+              </span>
+            </button>
+            <p class="ready-hint" data-i18n="ready_hint">Usually takes 2–4 seconds</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-card" id="resultCard" style="display:none">
+        <div class="result-top">
+          <div class="result-icon-lg" id="resultIcon">🌿</div>
+          <div class="result-names">
+            <div class="result-disease-name" id="resultDisease">—</div>
+            <div class="result-sev-badge" id="resultSeverity"></div>
+          </div>
+          <div class="result-conf">
+            <div class="conf-label-sm" data-i18n="confidence_label">Confidence</div>
+            <div class="conf-number" id="confValue">—</div>
+          </div>
+        </div>
+        <div class="result-body">
+          <div class="conf-track"><div class="conf-fill" id="confBarFill" style="width:0%"></div></div>
+
+          <div class="rblock">
+            <h4 data-i18n="desc_heading">Description</h4>
+            <p id="resultDesc">—</p>
+          </div>
+
+          <div class="remedy-grid">
+            <div class="remedy-card treat">
+              <h5 data-i18n="treatment_heading">Treatment</h5>
+              <p id="resultTreatment">—</p>
+            </div>
+            <div class="remedy-card prevent">
+              <h5 data-i18n="prevention_heading">Prevention</h5>
+              <p id="resultPrevention">—</p>
+            </div>
+          </div>
+
+          <div class="rblock">
+            <h4 data-i18n="chart_heading">All Class Probabilities</h4>
+            <div class="chart-canvas-box"><canvas id="probChart"></canvas></div>
+          </div>
+
+          <div class="rblock">
+            <h4 data-i18n="top3_heading">Top 3 Predictions</h4>
+            <div class="top3-items" id="top3List"></div>
+          </div>
+        </div>
+        <div class="result-footer">
+          <button class="btn-secondary" id="newBtn" data-i18n="btn_new">Analyze Another</button>
+          <button class="btn-secondary" id="printBtn" data-i18n="btn_print">Download Report</button>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="error-card" id="errorCard" style="display:none">
+        <div class="error-icon-lg">⚠️</div>
+        <p class="error-text" id="errorMsg" data-i18n="error_default">Something went wrong. Please try again.</p>
+        <button class="btn-retry" id="retryBtn" data-i18n="btn_retry">Try Again</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── HISTORY — always visible ─────────────────────────────── -->
+  <section class="history-section" id="history">
+    <div class="container">
+      <div class="history-head">
+        <div>
+          <p class="section-label" data-i18n="history_label">Your Scans</p>
+          <h2 class="section-title" data-i18n="history_title">Recent Diagnoses</h2>
+        </div>
+        <button class="btn-ghost" id="clearHistoryBtn" data-i18n="btn_clear_history" style="display:none">Clear History</button>
+      </div>
+      <div class="history-grid" id="historyGrid"></div>
+      <div class="history-empty" id="historyEmpty">
+        <div class="history-empty-icon">🌱</div>
+        <p data-i18n="history_empty">No scans yet. Run your first diagnosis above.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── DISEASES ─────────────────────────────────────────────── -->
+  <section class="diseases-section" id="diseases">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-label" data-i18n="diseases_label">Detection Coverage</p>
+        <h2 class="section-title" data-i18n="diseases_title">Detectable Conditions</h2>
+        <p class="section-desc" data-i18n="diseases_subtitle">Trained to detect 7 cotton leaf conditions</p>
+      </div>
+      <div class="disease-grid">
+        <div class="disease-card">
+          <div class="dc-badge sev-high">High Risk</div>
+          <div class="dc-name" data-i18n-disease="Bacterial Blight" data-i18n-field="name">Bacterial Blight</div>
+          <p class="dc-desc">Angular water-soaked lesions caused by Xanthomonas bacteria</p>
+        </div>
+        <div class="disease-card">
+          <div class="dc-badge sev-critical">Very High Risk</div>
+          <div class="dc-name" data-i18n-disease="Curl Virus" data-i18n-field="name">Curl Virus</div>
+          <p class="dc-desc">Severe leaf curling from CLCuD, transmitted via whitefly</p>
+        </div>
+        <div class="disease-card">
+          <div class="dc-badge sev-none">Healthy</div>
+          <div class="dc-name" data-i18n-disease="Healthy Leaf" data-i18n-field="name">Healthy Leaf</div>
+          <p class="dc-desc">Normal, disease-free cotton leaf in good condition</p>
+        </div>
+        <div class="disease-card">
+          <div class="dc-badge sev-medium">Medium Risk</div>
+          <div class="dc-name" data-i18n-disease="Herbicide Growth Damage" data-i18n-field="name">Herbicide Damage</div>
+          <p class="dc-desc">Growth distortion from herbicide drift or misapplication</p>
+        </div>
+        <div class="disease-card">
+          <div class="dc-badge sev-medium">Medium Risk</div>
+          <div class="dc-name" data-i18n-disease="Leaf Hopper Jassids" data-i18n-field="name">Leaf Hopper Jassids</div>
+          <p class="dc-desc">Yellowing and bronzing from jassid pest feeding</p>
+        </div>
+        <div class="disease-card">
+          <div class="dc-badge sev-low">Low Risk</div>
+          <div class="dc-name" data-i18n-disease="Leaf Redding" data-i18n-field="name">Leaf Redding</div>
+          <p class="dc-desc">Reddish discolouration from potassium deficiency or stress</p>
+        </div>
+        <div class="disease-card">
+          <div class="dc-badge sev-medium">Medium Risk</div>
+          <div class="dc-name" data-i18n-disease="Leaf Variegation" data-i18n-field="name">Leaf Variegation</div>
+          <p class="dc-desc">Mosaic colour patterns from viral infection or genetics</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ── ABOUT ────────────────────────────────────────────────── -->
+  <section class="about-section" id="about">
+    <div class="container">
+      <div class="section-head">
+        <p class="section-label" data-i18n="about_label">The Model</p>
+        <h2 class="section-title" data-i18n="about_title">About CottonGreen AI</h2>
+      </div>
+      <div class="about-grid">
+        <div class="about-card">
+          <h3 data-i18n="about_project_title">About the Project</h3>
+          <p data-i18n="about_project_desc">CottonGreen AI is a deep learning system designed to help farmers and agronomists detect cotton leaf diseases quickly and accurately using a smartphone or computer.</p>
+          <p data-i18n="about_project_desc2">The model was trained on thousands of cotton leaf images across 7 categories, achieving over 95% test accuracy.</p>
+          <div class="arch-flow" style="margin-top:16px;gap:6px">
+            <div class="arch-step">Input Image (224×224)</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step hl">EfficientNetB3 — Feature Extraction</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step purp">Global Average Pooling + Dropout</div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-step gold">Softmax — 7 Classes</div>
+          </div>
+        </div>
+        <div class="about-card">
+          <h3 data-i18n="about_model_title">Model Specifications</h3>
+          <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); overflow:hidden; margin-bottom:20px">
+            <div class="spec-row" style="padding:10px 14px"><span class="spec-key">Architecture</span><span class="spec-val">EfficientNetB3</span></div>
+            <div class="spec-row" style="padding:10px 14px"><span class="spec-key">Classes</span><span class="spec-val">7</span></div>
+            <div class="spec-row" style="padding:10px 14px"><span class="spec-key">Test Accuracy</span><span class="spec-val">&gt;95%</span></div>
+            <div class="spec-row" style="padding:10px 14px"><span class="spec-key">Input Size</span><span class="spec-val">224 × 224</span></div>
+            <div class="spec-row" style="padding:10px 14px"><span class="spec-key">Framework</span><span class="spec-val">TensorFlow / Keras</span></div>
+            <div class="spec-row" style="padding:10px 14px;border-bottom:none"><span class="spec-key">Languages</span><span class="spec-val">EN · తెలుగు · हिन्दी</span></div>
+          </div>
+          <p style="font-size:0.8rem;color:var(--text-muted)" data-i18n="about_disclaimer">For agricultural research and education. Always consult an agronomist for field decisions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">🌿 Cotton<span class="accent">Green</span> AI</div>
+        <p class="footer-meta" data-i18n="footer_built">Built with EfficientNetB3 · Deep Learning Disease Detection</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

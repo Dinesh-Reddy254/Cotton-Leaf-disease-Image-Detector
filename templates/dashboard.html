@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — CottonGreen AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="{{ url_for('index') }}" class="logo">
+        <span class="logo-icon">🌿</span>
+        <span>Cotton<span class="accent">Green</span> AI</span>
+      </a>
+      <nav class="main-nav">
+        <button type="button" onclick="location.href='{{ url_for('index') }}'" class="nav-link">Diagnose</button>
+        <button type="button" onclick="location.href='{{ url_for('dashboard') }}'" class="nav-link" style="color:var(--accent)">Dashboard</button>
+        {% if current_user.is_admin %}
+        <button type="button" onclick="location.href='{{ url_for('admin.admin_dashboard') }}'" class="nav-link">Admin</button>
+        {% endif %}
+      </nav>
+      <div class="header-actions">
+        <div class="user-dropdown-wrap">
+          <button class="avatar-btn" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            {{ current_user.username[0].upper() }}
+          </button>
+          <div class="user-dropdown" style="display:none">
+            <div class="dropdown-header">
+              <strong>{{ current_user.username }}</strong>
+              <span>{{ current_user.email }}</span>
+            </div>
+            <div class="dropdown-sep"></div>
+            <button type="button" onclick="location.href='{{ url_for('auth.logout') }}'" class="dropdown-link danger">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <div class="container">
+      <div class="dash-header">
+        <div>
+          <h1 class="dash-title">Welcome, {{ current_user.username }}</h1>
+          <p class="dash-subtitle">Your scanning activity at a glance</p>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn-primary">New Scan →</a>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="sc-icon">📊</div>
+          <div class="sc-value">{{ total_scans }}</div>
+          <div class="sc-label">Total Scans</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-icon">✅</div>
+          <div class="sc-value">{{ healthy_scans }}</div>
+          <div class="sc-label">Healthy</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-icon">⚠️</div>
+          <div class="sc-value">{{ diseased_scans }}</div>
+          <div class="sc-label">Diseased</div>
+        </div>
+        <div class="stat-card">
+          <div class="sc-icon">🎯</div>
+          <div class="sc-value">{{ avg_confidence }}%</div>
+          <div class="sc-label">Avg Confidence</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3 class="chart-title">Health Rate</h3>
+          <div class="health-ring-wrap">
+            <canvas id="healthChart" width="160" height="160"></canvas>
+            <div class="ring-center">{{ health_rate }}%</div>
+          </div>
+          <p class="chart-hint">{{ healthy_scans }} healthy out of {{ total_scans }} scans</p>
+        </div>
+        <div class="chart-card" style="flex:1.5">
+          <h3 class="chart-title">Disease Distribution</h3>
+          <canvas id="diseaseChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Scans -->
+      <div class="recent-section">
+        <h3 class="chart-title">Recent Scans</h3>
+        {% if recent_scans %}
+        <div class="history-grid">
+          {% for scan in recent_scans %}
+          <div class="history-card">
+            <div class="hc-top">
+              <span class="hc-disease">{{ scan.disease }}</span>
+              <span class="hc-conf">{{ "%.1f"|format(scan.confidence) }}%</span>
+            </div>
+            <span class="hc-sev sev-{{ scan.severity|lower|replace(' ','-') }}">{{ scan.severity }}</span>
+            <div class="hc-date">{{ scan.timestamp.strftime('%b %d, %Y  %H:%M') }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="history-empty">
+          <div class="history-empty-icon">🌱</div>
+          <p>No scans yet. <a href="{{ url_for('index') }}">Run your first diagnosis →</a></p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+
+  <script>
+  // Health Rate Donut
+  new Chart(document.getElementById('healthChart'),{
+    type:'doughnut',
+    data:{labels:['Healthy','Diseased'],datasets:[{data:[{{ healthy_scans }},{{ diseased_scans }}],backgroundColor:['hsl(142,62%,45%)','hsl(0,68%,55%)'],borderWidth:0}]},
+    options:{cutout:'75%',responsive:false,plugins:{legend:{display:false}}}
+  });
+
+  // Disease Distribution Bar
+  const diseaseData = {{ disease_frequency|tojson }};
+  if(diseaseData.length){
+    new Chart(document.getElementById('diseaseChart'),{
+      type:'bar',
+      data:{labels:diseaseData.map(d=>d.disease),datasets:[{data:diseaseData.map(d=>d.count),backgroundColor:'hsl(142,62%,45%)',borderRadius:6,barThickness:28}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#8fa89a'}},y:{grid:{display:false},ticks:{color:'#e8f0ec',font:{size:12}}}},plugins:{legend:{display:false}}}
+    });
+  }
+  </script>
+</body>
+</html>

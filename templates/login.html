@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — CottonGreen AI</title>
+  <meta name="description" content="Sign in to CottonGreen AI for cotton leaf disease detection." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+</head>
+<body class="auth-body">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <a href="{{ url_for('auth.login') }}" class="auth-logo">
+          <span>🌿</span>
+          <span>Cotton<span class="accent">Green</span> AI</span>
+        </a>
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-subtitle">Sign in to continue to your dashboard</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-list">
+          {% for cat, msg in messages %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" autocomplete="on" id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="identifier">Username or Email</label>
+            <input class="form-input" type="text" id="identifier" name="identifier"
+                   value="{{ identifier|default('') }}" placeholder="john_doe or john@example.com"
+                   required autofocus autocomplete="username" />
+          </div>
+          <div class="form-group" style="position:relative">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-input" type="password" id="password" name="password"
+                   placeholder="••••••••" required autocomplete="current-password" />
+            <button type="button" class="toggle-pw" onclick="togglePw('password',this)" aria-label="Toggle password">👁</button>
+          </div>
+          <label class="check-label">
+            <input type="checkbox" name="remember" /> Remember me
+          </label>
+          <button type="submit" class="btn-auth" id="loginBtn">Sign In</button>
+        </form>
+
+        <div class="auth-divider">or</div>
+        <p class="auth-switch">
+          Don't have an account?
+          <a href="{{ url_for('auth.register') }}" class="auth-link">Create one →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function togglePw(id,btn){const i=document.getElementById(id);const t=i.type==='password'?'text':'password';i.type=t;btn.textContent=t==='password'?'👁':'🙈'}
+  document.getElementById('loginForm').addEventListener('submit',function(){
+    const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='Signing in…';
+  });
+  </script>
+</body>
+</html>

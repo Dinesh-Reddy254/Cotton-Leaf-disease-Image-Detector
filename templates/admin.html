@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — CottonGreen AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="{{ url_for('index') }}" class="logo">
+        <span class="logo-icon">🌿</span>
+        <span>Cotton<span class="accent">Green</span> AI</span>
+      </a>
+      <nav class="main-nav">
+        <button type="button" onclick="location.href='{{ url_for('index') }}'" class="nav-link">Diagnose</button>
+        <button type="button" onclick="location.href='{{ url_for('dashboard') }}'" class="nav-link">Dashboard</button>
+        <button type="button" onclick="location.href='{{ url_for('admin.admin_dashboard') }}'" class="nav-link" style="color:var(--accent)">Admin</button>
+      </nav>
+      <div class="header-actions">
+        <div class="user-dropdown-wrap">
+          <button class="avatar-btn" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            {{ current_user.username[0].upper() }}
+          </button>
+          <div class="user-dropdown" style="display:none">
+            <div class="dropdown-header">
+              <strong>{{ current_user.username }}</strong>
+              <span>Admin Panel</span>
+            </div>
+            <div class="dropdown-sep"></div>
+            <button type="button" onclick="location.href='{{ url_for('auth.logout') }}'" class="dropdown-link danger">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <div class="container">
+      <div class="dash-header">
+        <div>
+          <h1 class="dash-title">Admin Dashboard</h1>
+          <p class="dash-subtitle">System overview and user management</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="sc-icon">👥</div><div class="sc-value">{{ total_users }}</div><div class="sc-label">Total Users</div></div>
+        <div class="stat-card"><div class="sc-icon">📊</div><div class="sc-value">{{ total_scans }}</div><div class="sc-label">Total Scans</div></div>
+        <div class="stat-card"><div class="sc-icon">🔑</div><div class="sc-value">{{ total_api_keys }}</div><div class="sc-label">API Keys</div></div>
+        <div class="stat-card"><div class="sc-icon">📈</div><div class="sc-value">{{ scans_24h }}</div><div class="sc-label">Scans (24h)</div></div>
+      </div>
+
+      <div class="charts-row">
+        <!-- Disease Distribution -->
+        <div class="chart-card" style="flex:1.5">
+          <h3 class="chart-title">Disease Detection Distribution</h3>
+          {% if disease_stats %}
+          <canvas id="adminDiseaseChart" height="220"></canvas>
+          {% else %}
+          <p style="color:var(--text-muted);text-align:center;padding:40px">No scan data yet.</p>
+          {% endif %}
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-title">Quick Stats</h3>
+          <div style="display:flex;flex-direction:column;gap:14px;padding:8px 0">
+            <div style="display:flex;justify-content:space-between;font-size:.88rem">
+              <span style="color:var(--text-muted)">New users (24h)</span>
+              <strong>{{ new_users_24h }}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.88rem">
+              <span style="color:var(--text-muted)">Scans (7d)</span>
+              <strong>{{ scans_7d }}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.88rem">
+              <span style="color:var(--text-muted)">Active API keys</span>
+              <strong>{{ total_api_keys }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Users Table -->
+      <div class="recent-section">
+        <h3 class="chart-title">Recent Users</h3>
+        <div style="overflow-x:auto">
+          <table class="admin-table">
+            <thead>
+              <tr><th>User</th><th>Email</th><th>Role</th><th>Scans</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for user in recent_users %}
+              <tr id="user-row-{{ user.id }}">
+                <td><strong>{{ user.username }}</strong></td>
+                <td style="color:var(--text-muted)">{{ user.email }}</td>
+                <td><span class="hc-sev {{ 'sev-high' if user.is_admin else 'sev-low' }}">{{ 'Admin' if user.is_admin else 'User' }}</span></td>
+                <td>{{ user.scans.count() }}</td>
+                <td><span class="hc-sev {{ 'sev-none' if user.is_active else 'sev-critical' }}">{{ 'Active' if user.is_active else 'Disabled' }}</span></td>
+                <td>
+                  {% if user.id != current_user.id %}
+                  <button class="btn-sm" onclick="toggleUser({{ user.id }})">{{ 'Disable' if user.is_active else 'Enable' }}</button>
+                  {% if not user.is_admin %}
+                  <button class="btn-sm" onclick="promoteUser({{ user.id }})">Promote</button>
+                  {% endif %}
+                  {% else %}
+                  <span style="color:var(--text-subtle);font-size:.78rem">You</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  {% if disease_stats %}
+  const ds = [{% for d in disease_stats %}{ name:"{{ d.disease }}", count:{{ d.cnt }} },{% endfor %}];
+  new Chart(document.getElementById('adminDiseaseChart'),{
+    type:'bar',
+    data:{labels:ds.map(d=>d.name),datasets:[{data:ds.map(d=>d.count),backgroundColor:['#2ecc71','#e74c3c','#3498db','#f39c12','#9b59b6','#1abc9c','#e67e22'],borderRadius:6,barThickness:28}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#8fa89a'}},y:{grid:{display:false},ticks:{color:'#e8f0ec',font:{size:12}}}},plugins:{legend:{display:false}}}
+  });
+  {% endif %}
+
+  async function toggleUser(id){
+    if(!confirm('Toggle this user\'s status?')) return;
+    const r=await fetch(`/admin/api/users/${id}/toggle`,{
+      method:'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token() }}'
+      }
+    });
+    if(r.ok) location.reload(); else alert('Failed');
+  }
+  async function promoteUser(id){
+    if(!confirm('Promote this user to admin?')) return;
+    const r=await fetch(`/admin/api/users/${id}/promote`,{
+      method:'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token() }}'
+      }
+    });
+    if(r.ok) location.reload(); else alert('Failed');
+  }
+  </script>
+</body>
+</html>

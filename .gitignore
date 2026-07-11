@@ -1,0 +1,31 @@
+# ── CottonGreen AI — .gitignore ─────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+instance/
+*.db
+*.sqlite3
+
+# Ignore model formats globally, but allow the model/*.keras contents to be tracked
+*.keras
+*.h5
+!model/*.keras
+
+.DS_Store
+Thumbs.db
+*.log
+dist/
+build/
+*.egg-info/
+test_test.txt
+test_image.jpg
+
+# Ignore uploads and raw training data directories
+uploads/
+model_training/data/raw/
+model_training/data/processed/
+model_training/outputs/
+
