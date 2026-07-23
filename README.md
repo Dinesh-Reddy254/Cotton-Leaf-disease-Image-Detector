@@ -2,6 +2,7 @@
 
 A Flask-based web app that detects cotton leaf diseases using deep learning (EfficientNetB3) on uploaded leaf images or real-time camera captures.
 
+**🌿 Live Demo:** [https://cottongreen-ai.onrender.com](https://cottongreen-ai.onrender.com)
 ## What It Does
 
 - Upload a cotton leaf photo or capture one directly using your device camera.
@@ -113,3 +114,14 @@ Open the app in your browser at http://127.0.0.1:5000.
 ## More Setup Details
 
 See `model_training/README.md` for detailed model training and evaluation guides.
+
+## Production Deployment (Render)
+
+If you are deploying this app to a production environment (like Render), you must set the following **Environment Variables**:
+
+- `FLASK_ENV` = `production`
+- `DATABASE_URL` = Your production database URL (e.g., PostgreSQL / Supabase pooler URL)
+- `USE_PROXYFIX` = `true` *(Required if running behind a load balancer like Render)*
+- `SECRET_KEY` = A random, secure string used for encrypting session cookies.
+- `GOOGLE_CLIENT_ID` = Your Google OAuth 2.0 Client ID
+- `GOOGLE_CLIENT_SECRET` = Your Google OAuth 2.0 Client Secret
