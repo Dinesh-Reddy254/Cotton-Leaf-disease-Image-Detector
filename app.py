@@ -55,7 +55,10 @@ def create_app(config_obj=None):
     # ── Database ──────────────────────────────────────────────────
     db.init_app(app)
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            log.warning(f"Database creation race condition handled: {e}")
 
     # ── Rate limiter ──────────────────────────────────────────────
     Limiter(
