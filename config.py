@@ -62,6 +62,10 @@ class BaseConfig:
     LOCKOUT_DURATION   = timedelta(minutes=15)
     PASSWORD_MIN_LENGTH = 8
 
+    # Google OAuth configuration
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+
     WTF_CSRF_ENABLED   = True
     WTF_CSRF_TIME_LIMIT = 3600
 

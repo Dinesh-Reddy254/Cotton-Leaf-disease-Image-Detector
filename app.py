@@ -76,6 +76,9 @@ def create_app(config_obj=None):
         return db.session.get(User, int(user_id))
 
     # ── Blueprints ────────────────────────────────────────────────
+    from auth import oauth
+    oauth.init_app(app)
+    
     app.register_blueprint(auth_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(admin_bp)

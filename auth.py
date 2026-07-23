@@ -5,9 +5,20 @@ import re, logging
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from db_models import db, User
+from authlib.integrations.flask_client import OAuth
+import secrets
 
 log     = logging.getLogger(__name__)
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+oauth   = OAuth()
+
+oauth.register(
+    name='google',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
 EMAIL_RE    = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_]{3,30}$")
 
@@ -98,3 +109,73 @@ def logout():
     logout_user()
     flash("You have been signed out.", "info")
     return redirect(url_for("auth.login"))
+
+
+@auth_bp.route("/google/login")
+def google_login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    redirect_uri = url_for("auth.google_authorize", _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@auth_bp.route("/google/authorize")
+def google_authorize():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    try:
+        token = oauth.google.authorize_access_token()
+    except Exception as e:
+        log.error(f"Google auth error: {e}")
+        flash("Google authentication failed or was cancelled.", "error")
+        return redirect(url_for("auth.login"))
+    
+    user_info = token.get("userinfo")
+    if not user_info:
+        flash("Could not fetch user information from Google.", "error")
+        return redirect(url_for("auth.login"))
+        
+    email = user_info.get("email", "").lower()
+    if not email:
+        flash("Google account must have an email address.", "error")
+        return redirect(url_for("auth.login"))
+
+    # Check if user already exists
+    user = User.query.filter_by(email=email).first()
+    if user:
+        if not user.is_active:
+            flash("Account deactivated. Contact support.", "error")
+            return redirect(url_for("auth.login"))
+        
+        # Link Google account if not linked
+        if user.oauth_provider != "google":
+            user.oauth_provider = "google"
+            user.oauth_provider_id = user_info.get("sub")
+            db.session.commit()
+    else:
+        # Create a new user for Google login
+        username = email.split("@")[0][:30]
+        # Handle potential username collisions
+        base_username = username
+        counter = 1
+        while User.query.filter_by(username=username).first():
+            username = f"{base_username[:25]}_{counter}"
+            counter += 1
+
+        user = User(
+            username=username, 
+            email=email,
+            oauth_provider="google",
+            oauth_provider_id=user_info.get("sub")
+        )
+        if User.query.count() == 0:
+            user.is_admin = True
+            user.role = "admin"
+        db.session.add(user)
+        db.session.commit()
+
+    user.record_successful_login(ip=request.remote_addr)
+    login_user(user, remember=True)
+    flash(f"Welcome back, {user.username}! 🌿", "success")
+    return redirect(url_for("index"))
+
