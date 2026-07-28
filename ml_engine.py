@@ -20,6 +20,8 @@ def init_engine(app_config: dict):
         "MODEL_PATH": app_config.get("MODEL_PATH"),
         "IMG_SIZE":   app_config.get("IMG_SIZE", (224, 224)),
         "CLASS_NAMES": app_config.get("CLASS_NAMES", []),
+        "HF_REPO_ID": app_config.get("HF_REPO_ID"),
+        "HF_MODEL_FILENAME": app_config.get("HF_MODEL_FILENAME"),
     }
 
 
@@ -30,8 +32,22 @@ def load_model():
 
     model_path = _config.get("MODEL_PATH")
     if not model_path or not os.path.exists(model_path):
-        log.error("MODEL_PATH not found: %s", model_path)
-        return None
+        log.warning("MODEL_PATH not found locally: %s", model_path)
+        hf_repo_id = _config.get("HF_REPO_ID")
+        hf_filename = _config.get("HF_MODEL_FILENAME")
+        
+        if hf_repo_id and hf_filename:
+            log.info("Attempting to download model from Hugging Face: %s/%s", hf_repo_id, hf_filename)
+            try:
+                from huggingface_hub import hf_hub_download
+                model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename)
+                log.info("Successfully downloaded model to %s", model_path)
+            except Exception as e:
+                log.error("Failed to download model from Hugging Face: %s", e)
+                return None
+        else:
+            log.error("No Hugging Face config provided, cannot download model.")
+            return None
 
     try:
         import tensorflow as tf
@@ -50,9 +66,9 @@ def load_model():
             except Exception:
                 _model = keras.models.load_model(model_path)
 
-        log.info("✅ Model loaded from %s", model_path)
+        log.info("\u2705 Model loaded from %s", model_path)
     except Exception as exc:
-        log.error("❌ Model load failed: %s", exc)
+        log.error("\u274c Model load failed: %s", exc)
         _model = None
 
     return _model
