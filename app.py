@@ -118,12 +118,13 @@ def create_app(config_obj=None):
 
     @app.route("/health")
     def health():
-        model_ok = ml_engine.get_model() is not None
+        # A lightweight health check to prevent Render from killing the instance 
+        # during heavy TensorFlow model loading.
         return jsonify({
-            "status": "ok" if model_ok else "degraded",
-            "model": "loaded" if model_ok else "unavailable",
+            "status": "ok",
+            "model": "lazy_loaded",
             "version": app.config.get("APP_VERSION"),
-        }), 200 if model_ok else 503
+        }), 200
 
     # ── Error handlers ────────────────────────────────────────────
     @app.errorhandler(400)
