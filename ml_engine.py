@@ -53,7 +53,7 @@ def load_model():
     try:
         import tensorflow as tf
         import keras
-        from tensorflow.keras.layers import InputLayer
+        from tensorflow.keras.layers import InputLayer, Dense
 
         class SafeInputLayer(InputLayer):
             def __init__(self, *args, **kwargs):
@@ -61,7 +61,12 @@ def load_model():
                 kwargs.pop("batch_shape", None)
                 super().__init__(*args, **kwargs)
 
-        with keras.saving.custom_object_scope({"InputLayer": SafeInputLayer}):
+        class SafeDense(Dense):
+            def __init__(self, *args, **kwargs):
+                kwargs.pop("quantization_config", None)
+                super().__init__(*args, **kwargs)
+
+        with keras.saving.custom_object_scope({"InputLayer": SafeInputLayer, "Dense": SafeDense}):
             try:
                 _model = tf.keras.models.load_model(model_path, compile=False)
             except Exception:
