@@ -80,42 +80,60 @@ def get_model():
 
 
 def _check_ood(img: Image.Image) -> dict:
-    global _ood_model
+    """
+    Memory-efficient OOD check using Hugging Face Inference API (Free Tier).
+    Uses 0 local memory instead of loading another heavy Keras model.
+    """
     try:
-        import tensorflow.keras.applications.mobilenet_v2 as mobilenet_v2
-        if _ood_model is None:
-            _ood_model = mobilenet_v2.MobileNetV2(weights='imagenet')
-
-        img_rgb = img.convert('RGB').resize((224, 224))
-        arr = mobilenet_v2.preprocess_input(np.array(img_rgb, dtype=np.float32))
-        tensor = np.expand_dims(arr, 0)
+        import requests
+        import io
         
-        probs = _ood_model.predict(tensor, verbose=0)
-        top3 = mobilenet_v2.decode_predictions(probs, top=3)[0]
+        # Convert image to JPEG bytes
+        buf = io.BytesIO()
+        img.copy().convert('RGB').resize((224, 224)).save(buf, format='JPEG')
+        data = buf.getvalue()
         
-        PLANT_KEYWORDS = {
-            'leaf', 'plant', 'flower', 'tree', 'herb', 'shrub', 'vine', 'moss',
-            'fungus', 'mushroom', 'seed', 'petal', 'stem', 'grass', 'weed',
-            'cotton', 'daisy', 'rose', 'sunflower', 'tulip', 'orchid', 'lily',
-            'corn', 'wheat', 'hay', 'straw', 'garden', 'pot', 'planter',
-            'greenhouse', 'acorn', 'hip', 'fig', 'lemon', 'orange', 'banana',
-            'pineapple', 'strawberry', 'pomegranate', 'jackfruit', 'custard_apple',
-            'cardoon', 'artichoke', 'cabbage', 'broccoli', 'cauliflower',
-            'zucchini', 'cucumber', 'bell_pepper', 'mushroom', 'agaric',
-            'ear', 'rapeseed', 'buckeye', 'coral_fungus',
-        }
+        # Use ViT ImageNet model on HF free inference API
+        API_URL = "https://api-inference.huggingface.co/models/google/vit-base-patch16-224"
         
-        top_label_human_readable = top3[0][1]
-        top_confidence_pct = round(float(top3[0][2]) * 100, 2)
+        # 5 second timeout to prevent hanging the web server
+        response = requests.post(API_URL, data=data, timeout=5)
         
-        for _, label, _ in top3:
-            label_lower = label.lower()
-            if any(kw in label_lower for kw in PLANT_KEYWORDS):
-                return {'is_ood': False}
+        if response.status_code == 200:
+            result = response.json()
+            if isinstance(result, list) and len(result) > 0:
+                top_label = result[0].get('label', '')
+                top_score = result[0].get('score', 0.0)
                 
-        return {'is_ood': True, 'ood_label': top_label_human_readable, 'ood_confidence': top_confidence_pct}
+                PLANT_KEYWORDS = {
+                    'leaf', 'plant', 'flower', 'tree', 'herb', 'shrub', 'vine', 'moss',
+                    'fungus', 'mushroom', 'seed', 'petal', 'stem', 'grass', 'weed',
+                    'cotton', 'daisy', 'rose', 'sunflower', 'tulip', 'orchid', 'lily',
+                    'corn', 'wheat', 'hay', 'straw', 'garden', 'pot', 'planter',
+                    'greenhouse', 'acorn', 'hip', 'fig', 'lemon', 'orange', 'banana',
+                    'pineapple', 'strawberry', 'pomegranate', 'jackfruit', 'custard_apple',
+                    'cardoon', 'artichoke', 'cabbage', 'broccoli', 'cauliflower',
+                    'zucchini', 'cucumber', 'bell_pepper', 'mushroom', 'agaric',
+                    'ear', 'rapeseed', 'buckeye', 'coral_fungus',
+                }
+                
+                label_lower = top_label.lower()
+                # If the image is not a plant, flag it as OOD
+                if not any(kw in label_lower for kw in PLANT_KEYWORDS):
+                    # Clean up label (e.g. 'sports car, sport car' -> 'Sports Car')
+                    human_label = top_label.split(',')[0].title()
+                    return {
+                        'is_ood': True, 
+                        'ood_label': human_label, 
+                        'ood_confidence': round(top_score * 100, 2)
+                    }
+        else:
+            log.warning(f"HF API returned {response.status_code}: {response.text[:100]}")
+            
+        # If API fails, rate-limited, or it's a plant, let the main model handle it
+        return {'is_ood': False}
     except Exception as e:
-        log.error("OOD check failed: %s", e)
+        log.warning("HF API OOD check failed or timed out: %s", e)
         return {'is_ood': False}
 
 
