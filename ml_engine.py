@@ -10,6 +10,7 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 _model = None
+_ood_model = None
 _config: dict = {}
 
 
@@ -78,6 +79,46 @@ def get_model():
     return _model if _model is not None else load_model()
 
 
+def _check_ood(img: Image.Image) -> dict:
+    global _ood_model
+    try:
+        import tensorflow.keras.applications.mobilenet_v2 as mobilenet_v2
+        if _ood_model is None:
+            _ood_model = mobilenet_v2.MobileNetV2(weights='imagenet')
+
+        img_rgb = img.convert('RGB').resize((224, 224))
+        arr = mobilenet_v2.preprocess_input(np.array(img_rgb, dtype=np.float32))
+        tensor = np.expand_dims(arr, 0)
+        
+        probs = _ood_model.predict(tensor, verbose=0)
+        top3 = mobilenet_v2.decode_predictions(probs, top=3)[0]
+        
+        PLANT_KEYWORDS = {
+            'leaf', 'plant', 'flower', 'tree', 'herb', 'shrub', 'vine', 'moss',
+            'fungus', 'mushroom', 'seed', 'petal', 'stem', 'grass', 'weed',
+            'cotton', 'daisy', 'rose', 'sunflower', 'tulip', 'orchid', 'lily',
+            'corn', 'wheat', 'hay', 'straw', 'garden', 'pot', 'planter',
+            'greenhouse', 'acorn', 'hip', 'fig', 'lemon', 'orange', 'banana',
+            'pineapple', 'strawberry', 'pomegranate', 'jackfruit', 'custard_apple',
+            'cardoon', 'artichoke', 'cabbage', 'broccoli', 'cauliflower',
+            'zucchini', 'cucumber', 'bell_pepper', 'mushroom', 'agaric',
+            'ear', 'rapeseed', 'buckeye', 'coral_fungus',
+        }
+        
+        top_label_human_readable = top3[0][1]
+        top_confidence_pct = round(float(top3[0][2]) * 100, 2)
+        
+        for _, label, _ in top3:
+            label_lower = label.lower()
+            if any(kw in label_lower for kw in PLANT_KEYWORDS):
+                return {'is_ood': False}
+                
+        return {'is_ood': True, 'ood_label': top_label_human_readable, 'ood_confidence': top_confidence_pct}
+    except Exception as e:
+        log.error("OOD check failed: %s", e)
+        return {'is_ood': False}
+
+
 def predict_image(img: Image.Image) -> dict:
     """Run inference. Returns dict with disease, confidence, top3, all_probs, info."""
     from tensorflow.keras.applications.efficientnet import preprocess_input
@@ -91,6 +132,20 @@ def predict_image(img: Image.Image) -> dict:
     img_size    = _config["IMG_SIZE"]
 
     img_rgb  = img.convert("RGB").resize(img_size)
+
+    ood_result = _check_ood(img)
+    if ood_result.get('is_ood'):
+        return {
+            'is_ood': True,
+            'ood_label': ood_result['ood_label'],
+            'ood_confidence': ood_result['ood_confidence'],
+            'disease': 'Not a Cotton Leaf',
+            'confidence': 0.0,
+            'all_probs': {},
+            'top3': [],
+            'info': {},
+        }
+
     arr      = preprocess_input(np.array(img_rgb, dtype=np.float32))
     tensor   = np.expand_dims(arr, 0)
     probs    = model.predict(tensor, verbose=0)[0]
@@ -106,4 +161,5 @@ def predict_image(img: Image.Image) -> dict:
         "all_probs":  all_probs,
         "top3":       top3,
         "info":       DISEASE_INFO.get(class_names[top_idx], {}),
+        "is_ood":     False,
     }
