@@ -69,6 +69,19 @@ const TRANSLATIONS = {
     err_file_too_large: "File is too large. Maximum size is 16 MB.",
     err_network: "Network error. Make sure the server is running and try again.",
 
+    // OOD Detection
+    ood_title: "Not a Cotton Leaf",
+    ood_what_detected: "What We Detected",
+    ood_explanation: "Our AI system analyzed your image and identified it as \"{{label}}\" with {{conf}}% confidence. This application is specifically designed to diagnose diseases in cotton plant leaves only. The uploaded image does not appear to be a cotton leaf, so we cannot provide a reliable disease diagnosis. Please upload a clear photograph of a cotton leaf for accurate results.",
+    ood_purpose_title: "Purpose of This App",
+    ood_purpose_desc: "CottonGreen AI is specifically designed and trained to diagnose diseases in cotton plant leaves only. It uses an EfficientNetB3 model trained on 7 cotton leaf disease categories.",
+    ood_tips_title: "Tips for Best Results",
+    ood_tip_1: "Upload a clear photo of a single cotton leaf",
+    ood_tip_2: "Make sure the leaf fills most of the image frame",
+    ood_tip_3: "Use good lighting \u2014 avoid shadows and glare",
+    ood_tip_4: "Avoid including other objects, hands, or backgrounds",
+    ood_supported_title: "Supported Disease Classes",
+
     // Diseases Section
     diseases_title: "Detectable Diseases",
     diseases_subtitle: "Our model is trained to detect 7 cotton leaf conditions",
@@ -433,7 +446,7 @@ const TRANSLATIONS = {
         severity: "बहुत उच्च",
         severity_label: "बहुत उच्च जोखिम",
         description: "सफेद मक्खी Bemisia tabaci द्वारा फैलने वाला कॉटन लीफ कर्ल डिजीज (CLCuD)। गंभीर पत्ती मुड़ना और विकास रुकना।",
-        treatment: "संक्रमण के बाद कोई इलाज नहीं। सफेद मक्खी वेक्टर को नियंत्रित करने के लिए इमिडाक्लोप्रिड या थायमेथोक्साम लगाएँ।",
+        treatment: "संक्रमण के बाद कोई इलाज नहीं। सफेद मक्खी वेक्टर को नियंत्रित करने के लिए इमिడాक्लोप्रिड या थायमेथोक्साम लगाएँ।",
         prevention: "CLCuD-प्रतिरोधी किस्में लगाएँ, संक्रमित पौधों को जल्दी हटाएँ, पीले चिपचिपे जाल लगाएँ।",
         card_desc: "सफेद मक्खी द्वारा फैले CLCuD से गंभीर पत्ती मुड़ना",
       },

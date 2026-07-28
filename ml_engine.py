@@ -67,9 +67,9 @@ def load_model():
             except Exception:
                 _model = keras.models.load_model(model_path)
 
-        log.info("\u2705 Model loaded from %s", model_path)
+        log.info("✅ Model loaded from %s", model_path)
     except Exception as exc:
-        log.error("\u274c Model load failed: %s", exc)
+        log.error("❌ Model load failed: %s", exc)
         _model = None
 
     return _model

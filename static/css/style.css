@@ -240,3 +240,172 @@ button{cursor:pointer;font-family:var(--font)}
   .hero{padding:48px 16px 36px}
   .container{padding:0 16px}
 }
+
+/* ── OOD Warning Styles ──────────────────────────────────────── */
+.ood-warning {
+  animation: oodSlideIn .5s cubic-bezier(.4,0,.2,1);
+}
+@keyframes oodSlideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ood-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, hsla(0,68%,60%,.15), hsla(42,90%,55%,.08));
+  border-bottom: 1px solid hsla(0,68%,60%,.2);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.ood-icon {
+  font-size: 2.5rem;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsla(0,68%,60%,.12);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ood-title-wrap { flex: 1; }
+.ood-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--red);
+  margin: 0 0 6px;
+}
+.ood-detected-label { margin-top: 2px; }
+.ood-badge {
+  display: inline-block;
+  background: hsla(0,68%,60%,.15);
+  color: hsl(0,80%,72%);
+  border: 1px solid hsla(0,68%,60%,.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-display);
+  letter-spacing: .3px;
+}
+.ood-body {
+  padding: 24px 28px 28px;
+}
+.ood-explanation {
+  display: flex;
+  gap: 14px;
+  padding: 18px 20px;
+  background: hsla(42,90%,55%,.06);
+  border: 1px solid hsla(42,90%,55%,.15);
+  border-radius: var(--radius-sm);
+  margin-bottom: 24px;
+}
+.ood-explanation-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ood-explanation h4 {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--gold);
+  margin: 0 0 8px;
+}
+.ood-explanation p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+}
+.ood-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media(max-width:640px) {
+  .ood-details-grid { grid-template-columns: 1fr; }
+}
+.ood-detail-card {
+  padding: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.ood-detail-card:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-3);
+}
+.ood-detail-icon {
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+}
+.ood-detail-card h5 {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+.ood-detail-card p {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0;
+}
+.ood-tips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ood-tips li {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  padding: 4px 0 4px 16px;
+  position: relative;
+}
+.ood-tips li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: bold;
+}
+.ood-supported {
+  padding: 18px 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.ood-supported h5 {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+.ood-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ood-tag {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: hsla(0,68%,60%,.1);
+  color: hsl(0,60%,70%);
+  border: 1px solid hsla(0,68%,60%,.15);
+}
+.ood-tag.healthy {
+  background: hsla(142,62%,45%,.1);
+  color: hsl(142,50%,60%);
+  border-color: hsla(142,62%,45%,.2);
+}

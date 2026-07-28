@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
 
-# ── Predict ───────────────────────────────────────────────────────────
+# ── Predict ───────────────────────────────────────────────────────
 @api_bp.route("/predict", methods=["POST"])
 @api_key_or_login_required
 def api_predict():
@@ -48,7 +48,7 @@ def api_predict():
         return jsonify({"error": "Invalid or corrupted image file"}), 400
 
     if ml_engine.get_model() is None:
-        return jsonify({"error": "Model not ready \u2014 please try again shortly"}), 503
+        return jsonify({"error": "Model not ready — please try again shortly"}), 503
 
     user = get_current_api_user()
     t0   = time.time()
@@ -79,10 +79,10 @@ def api_predict():
 
     except Exception as exc:
         log.error("Prediction error: %s", exc, exc_info=True)
-        return jsonify({"error": "Prediction failed \u2014 internal error"}), 500
+        return jsonify({"error": "Prediction failed — internal error"}), 500
 
 
-# ── History ───────────────────────────────────────────────────────────
+# ── History ───────────────────────────────────────────────────────
 @api_bp.route("/history", methods=["GET"])
 @api_key_or_login_required
 def api_get_history():
@@ -113,14 +113,14 @@ def api_clear_history():
 
 
 
-# ── Stats ─────────────────────────────────────────────────────────────
+# ── Stats ─────────────────────────────────────────────────────────
 @api_bp.route("/stats", methods=["GET"])
 @api_key_or_login_required
 def api_stats():
     return jsonify(compute_user_stats(get_current_api_user().id))
 
 
-# ── API Key Management ────────────────────────────────────────────────
+# ── API Key Management ────────────────────────────────────────────
 @api_bp.route("/keys", methods=["GET"])
 @api_key_or_login_required
 def list_api_keys():

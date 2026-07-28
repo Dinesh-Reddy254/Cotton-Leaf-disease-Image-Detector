@@ -48,7 +48,11 @@
         clearHistBtn   = $("clearHistoryBtn"),
         avatarBtn      = $("avatarBtn"),
         userDropdown   = $("userDropdown"),
-        userDropdownWrap = $("userDropdownWrap");
+        userDropdownWrap = $("userDropdownWrap"),
+        oodWarning     = $("oodWarning"),
+        normalResult   = $("normalResult"),
+        oodDetectedLabel = $("oodDetectedLabel"),
+        oodExplanation = $("oodExplanation");
 
   // Result Card fields
   const resultIcon     = $("resultIcon"),
@@ -378,8 +382,41 @@
     });
   }
 
+  // ── RENDER OOD RESULT ─────────────────────────────────────────────
+  function renderOodResult(data) {
+    const label = data.ood_label || "Unknown Object";
+    const conf = data.ood_confidence || 0;
+
+    // Build detected label badge
+    if (oodDetectedLabel) {
+      oodDetectedLabel.innerHTML = `<span class="ood-badge">${escapeHTML(label)} (${conf.toFixed(1)}%)</span>`;
+    }
+
+    // Build detailed explanation
+    const explanationText = (t("ood_explanation") || "Our AI system analyzed your image and identified it as \"{{label}}\" with {{conf}}% confidence. This application is specifically designed to diagnose diseases in cotton plant leaves only. The uploaded image does not appear to be a cotton leaf, so we cannot provide a reliable disease diagnosis. Please upload a clear photograph of a cotton leaf for accurate results.")
+      .replace("{{label}}", label)
+      .replace("{{conf}}", conf.toFixed(1));
+    if (oodExplanation) oodExplanation.textContent = explanationText;
+
+    // Show OOD, hide normal
+    if (oodWarning) oodWarning.style.display = "block";
+    if (normalResult) normalResult.style.display = "none";
+    resultCard.style.display = "block";
+    resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
   // ── RENDER RESULT ─────────────────────────────────────────────────
   function renderResult(data) {
+    // Check for OOD (out-of-distribution) result
+    if (data.is_ood) {
+      renderOodResult(data);
+      return;
+    }
+
+    // Show normal result, hide OOD
+    if (oodWarning) oodWarning.style.display = "none";
+    if (normalResult) normalResult.style.display = "block";
+
     const info = data.info || {};
     const diseaseName = data.disease; // Standard English disease name from model
 

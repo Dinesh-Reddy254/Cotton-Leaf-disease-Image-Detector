@@ -165,44 +165,96 @@
 
       <!-- Result -->
       <div class="result-card" id="resultCard" style="display:none">
-        <div class="result-top">
-          <div class="result-icon-lg" id="resultIcon">🌿</div>
-          <div class="result-names">
-            <div class="result-disease-name" id="resultDisease">—</div>
-            <div class="result-sev-badge" id="resultSeverity"></div>
+        <!-- OOD Warning — shown when non-cotton image detected -->
+        <div class="ood-warning" id="oodWarning" style="display:none">
+          <div class="ood-header">
+            <div class="ood-icon">🚫</div>
+            <div class="ood-title-wrap">
+              <h3 class="ood-title" data-i18n="ood_title">Not a Cotton Leaf</h3>
+              <div class="ood-detected-label" id="oodDetectedLabel"></div>
+            </div>
           </div>
-          <div class="result-conf">
-            <div class="conf-label-sm" data-i18n="confidence_label">Confidence</div>
-            <div class="conf-number" id="confValue">—</div>
+          <div class="ood-body">
+            <div class="ood-explanation">
+              <div class="ood-explanation-icon">🔍</div>
+              <div>
+                <h4 data-i18n="ood_what_detected">What We Detected</h4>
+                <p id="oodExplanation"></p>
+              </div>
+            </div>
+            <div class="ood-details-grid">
+              <div class="ood-detail-card">
+                <div class="ood-detail-icon">🎯</div>
+                <h5 data-i18n="ood_purpose_title">Purpose of This App</h5>
+                <p data-i18n="ood_purpose_desc">CottonGreen AI is specifically designed and trained to diagnose diseases in cotton plant leaves only. It uses an EfficientNetB3 model trained on 7 cotton leaf disease categories.</p>
+              </div>
+              <div class="ood-detail-card">
+                <div class="ood-detail-icon">📸</div>
+                <h5 data-i18n="ood_tips_title">Tips for Best Results</h5>
+                <ul class="ood-tips">
+                  <li data-i18n="ood_tip_1">Upload a clear photo of a single cotton leaf</li>
+                  <li data-i18n="ood_tip_2">Make sure the leaf fills most of the image frame</li>
+                  <li data-i18n="ood_tip_3">Use good lighting — avoid shadows and glare</li>
+                  <li data-i18n="ood_tip_4">Avoid including other objects, hands, or backgrounds</li>
+                </ul>
+              </div>
+            </div>
+            <div class="ood-supported">
+              <h5 data-i18n="ood_supported_title">Supported Disease Classes</h5>
+              <div class="ood-tags">
+                <span class="ood-tag">Bacterial Blight</span>
+                <span class="ood-tag">Curl Virus</span>
+                <span class="ood-tag healthy">Healthy Leaf</span>
+                <span class="ood-tag">Herbicide Damage</span>
+                <span class="ood-tag">Leaf Hopper Jassids</span>
+                <span class="ood-tag">Leaf Redding</span>
+                <span class="ood-tag">Leaf Variegation</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="result-body">
-          <div class="conf-track"><div class="conf-fill" id="confBarFill" style="width:0%"></div></div>
 
-          <div class="rblock">
-            <h4 data-i18n="desc_heading">Description</h4>
-            <p id="resultDesc">—</p>
-          </div>
-
-          <div class="remedy-grid">
-            <div class="remedy-card treat">
-              <h5 data-i18n="treatment_heading">Treatment</h5>
-              <p id="resultTreatment">—</p>
+        <!-- Normal Result — shown for cotton leaf images -->
+        <div id="normalResult">
+          <div class="result-top">
+            <div class="result-icon-lg" id="resultIcon">🌿</div>
+            <div class="result-names">
+              <div class="result-disease-name" id="resultDisease">—</div>
+              <div class="result-sev-badge" id="resultSeverity"></div>
             </div>
-            <div class="remedy-card prevent">
-              <h5 data-i18n="prevention_heading">Prevention</h5>
-              <p id="resultPrevention">—</p>
+            <div class="result-conf">
+              <div class="conf-label-sm" data-i18n="confidence_label">Confidence</div>
+              <div class="conf-number" id="confValue">—</div>
             </div>
           </div>
+          <div class="result-body">
+            <div class="conf-track"><div class="conf-fill" id="confBarFill" style="width:0%"></div></div>
 
-          <div class="rblock">
-            <h4 data-i18n="chart_heading">All Class Probabilities</h4>
-            <div class="chart-canvas-box"><canvas id="probChart"></canvas></div>
-          </div>
+            <div class="rblock">
+              <h4 data-i18n="desc_heading">Description</h4>
+              <p id="resultDesc">—</p>
+            </div>
 
-          <div class="rblock">
-            <h4 data-i18n="top3_heading">Top 3 Predictions</h4>
-            <div class="top3-items" id="top3List"></div>
+            <div class="remedy-grid">
+              <div class="remedy-card treat">
+                <h5 data-i18n="treatment_heading">Treatment</h5>
+                <p id="resultTreatment">—</p>
+              </div>
+              <div class="remedy-card prevent">
+                <h5 data-i18n="prevention_heading">Prevention</h5>
+                <p id="resultPrevention">—</p>
+              </div>
+            </div>
+
+            <div class="rblock">
+              <h4 data-i18n="chart_heading">All Class Probabilities</h4>
+              <div class="chart-canvas-box"><canvas id="probChart"></canvas></div>
+            </div>
+
+            <div class="rblock">
+              <h4 data-i18n="top3_heading">Top 3 Predictions</h4>
+              <div class="top3-items" id="top3List"></div>
+            </div>
           </div>
         </div>
         <div class="result-footer">
