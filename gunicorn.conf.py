@@ -1,7 +1,8 @@
 # gunicorn.conf.py
-# This configuration increases the worker timeout so that heavy ML models 
-# (like TensorFlow's EfficientNet) don't get killed during their first prediction.
+# Single-worker, multi-threaded configuration to keep TensorFlow memory usage
+# under Render's 512MB RAM limit while providing non-blocking request handling.
 
 timeout = 120
 workers = 1
-threads = 2
+threads = 4
+keepalive = 5

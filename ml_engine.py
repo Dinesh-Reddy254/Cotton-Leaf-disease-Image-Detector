@@ -7,11 +7,14 @@ import logging
 import numpy as np
 from PIL import Image
 
+import threading
+
 log = logging.getLogger(__name__)
 
 _model = None
 _ood_model = None
 _config: dict = {}
+_model_lock = threading.Lock()
 
 
 def init_engine(app_config: dict):
@@ -24,6 +27,9 @@ def init_engine(app_config: dict):
         "HF_REPO_ID": app_config.get("HF_REPO_ID"),
         "HF_MODEL_FILENAME": app_config.get("HF_MODEL_FILENAME"),
     }
+    # Pre-warm model in background thread upon initialization
+    t = threading.Thread(target=load_model, daemon=True)
+    t.start()
 
 
 def load_model():
@@ -31,53 +37,63 @@ def load_model():
     if _model is not None:
         return _model
 
-    model_path = _config.get("MODEL_PATH")
-    if not model_path or not os.path.exists(model_path):
-        log.warning("MODEL_PATH not found locally: %s", model_path)
-        hf_repo_id = _config.get("HF_REPO_ID")
-        hf_filename = _config.get("HF_MODEL_FILENAME")
-        
-        if hf_repo_id and hf_filename:
-            log.info("Attempting to download model from Hugging Face: %s/%s", hf_repo_id, hf_filename)
-            try:
-                from huggingface_hub import hf_hub_download
-                model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename)
-                log.info("Successfully downloaded model to %s", model_path)
-            except Exception as e:
-                log.error("Failed to download model from Hugging Face: %s", e)
+    with _model_lock:
+        # Re-check if another thread initialized model while waiting for lock
+        if _model is not None:
+            return _model
+
+        model_path = _config.get("MODEL_PATH")
+        if not model_path or not os.path.exists(model_path):
+            log.warning("MODEL_PATH not found locally: %s", model_path)
+            hf_repo_id = _config.get("HF_REPO_ID")
+            hf_filename = _config.get("HF_MODEL_FILENAME")
+            
+            if hf_repo_id and hf_filename:
+                log.info("Attempting to download model from Hugging Face: %s/%s", hf_repo_id, hf_filename)
+                try:
+                    from huggingface_hub import hf_hub_download
+                    # Attempt download with configured filename, or fallback to basename
+                    try:
+                        model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename)
+                    except Exception:
+                        basename = os.path.basename(hf_filename)
+                        model_path = hf_hub_download(repo_id=hf_repo_id, filename=basename)
+                    log.info("Successfully downloaded model to %s", model_path)
+                except Exception as e:
+                    log.error("Failed to download model from Hugging Face: %s", e)
+                    return None
+            else:
+                log.error("No Hugging Face config provided, cannot download model.")
                 return None
-        else:
-            log.error("No Hugging Face config provided, cannot download model.")
-            return None
 
-    try:
-        import tensorflow as tf
-        import keras
-        from tensorflow.keras.layers import InputLayer, Dense
+        try:
+            import tensorflow as tf
+            import keras
+            from tensorflow.keras.layers import InputLayer, Dense
 
-        class SafeInputLayer(InputLayer):
-            def __init__(self, *args, **kwargs):
-                kwargs.pop("optional", None)
-                kwargs.pop("batch_shape", None)
-                super().__init__(*args, **kwargs)
+            class SafeInputLayer(InputLayer):
+                def __init__(self, *args, **kwargs):
+                    kwargs.pop("optional", None)
+                    kwargs.pop("batch_shape", None)
+                    super().__init__(*args, **kwargs)
 
-        class SafeDense(Dense):
-            def __init__(self, *args, **kwargs):
-                kwargs.pop("quantization_config", None)
-                super().__init__(*args, **kwargs)
+            class SafeDense(Dense):
+                def __init__(self, *args, **kwargs):
+                    kwargs.pop("quantization_config", None)
+                    super().__init__(*args, **kwargs)
 
-        with keras.saving.custom_object_scope({"InputLayer": SafeInputLayer, "Dense": SafeDense}):
-            try:
-                _model = tf.keras.models.load_model(model_path, compile=False)
-            except Exception:
-                _model = keras.models.load_model(model_path)
+            with keras.saving.custom_object_scope({"InputLayer": SafeInputLayer, "Dense": SafeDense}):
+                try:
+                    _model = tf.keras.models.load_model(model_path, compile=False)
+                except Exception:
+                    _model = keras.models.load_model(model_path)
 
-        log.info("✅ Model loaded from %s", model_path)
-    except Exception as exc:
-        log.error("❌ Model load failed: %s", exc)
-        _model = None
+            log.info("✅ Model loaded from %s", model_path)
+        except Exception as exc:
+            log.error("❌ Model load failed: %s", exc)
+            _model = None
 
-    return _model
+        return _model
 
 
 def get_model():
