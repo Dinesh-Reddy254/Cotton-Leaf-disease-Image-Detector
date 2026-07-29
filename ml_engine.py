@@ -26,10 +26,8 @@ def init_engine(app_config: dict):
         "CLASS_NAMES": app_config.get("CLASS_NAMES", []),
         "HF_REPO_ID": app_config.get("HF_REPO_ID"),
         "HF_MODEL_FILENAME": app_config.get("HF_MODEL_FILENAME"),
+        "HF_TOKEN": app_config.get("HF_TOKEN") or os.environ.get("HF_TOKEN"),
     }
-    # Pre-warm model in background thread upon initialization
-    t = threading.Thread(target=load_model, daemon=True)
-    t.start()
 
 
 def load_model():
@@ -52,12 +50,13 @@ def load_model():
                 log.info("Attempting to download model from Hugging Face: %s/%s", hf_repo_id, hf_filename)
                 try:
                     from huggingface_hub import hf_hub_download
+                    hf_token = _config.get("HF_TOKEN")
                     # Attempt download with configured filename, or fallback to basename
                     try:
-                        model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename)
+                        model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename, token=hf_token)
                     except Exception:
                         basename = os.path.basename(hf_filename)
-                        model_path = hf_hub_download(repo_id=hf_repo_id, filename=basename)
+                        model_path = hf_hub_download(repo_id=hf_repo_id, filename=basename, token=hf_token)
                     log.info("Successfully downloaded model to %s", model_path)
                 except Exception as e:
                     log.error("Failed to download model from Hugging Face: %s", e)
