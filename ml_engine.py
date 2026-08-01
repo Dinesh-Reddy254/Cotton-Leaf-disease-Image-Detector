@@ -83,7 +83,28 @@ def load_model():
             import keras
             log.info("Loading model with Keras %s ...", keras.__version__)
 
-            _model = keras.models.load_model(model_path, compile=False)
+            from keras.layers import InputLayer, Dense
+            
+            class SafeInputLayer(InputLayer):
+                def __init__(self, *args, **kwargs):
+                    kwargs.pop("optional", None)
+                    kwargs.pop("batch_shape", None)
+                    super().__init__(*args, **kwargs)
+
+            class SafeDense(Dense):
+                def __init__(self, *args, **kwargs):
+                    kwargs.pop("quantization_config", None)
+                    super().__init__(*args, **kwargs)
+
+            custom_objects = {
+                "InputLayer": SafeInputLayer,
+                "Dense": SafeDense,
+                "Functional": keras.Model,
+            }
+
+            with keras.saving.custom_object_scope(custom_objects):
+                _model = keras.models.load_model(model_path, compile=False)
+                
             log.info("✅ Model loaded from %s", model_path)
 
             # Pre-warm execution graph to eliminate cold-start latency
