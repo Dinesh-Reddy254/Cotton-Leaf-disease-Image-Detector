@@ -45,6 +45,46 @@ def is_model_available() -> bool:
     return bool(_config.get("HF_REPO_ID"))
 
 
+def patch_keras_module_paths():
+    """
+    Patch sys.modules to handle Keras internal module name migrations
+    (e.g., 'keras.src.models.functional' -> 'keras.src.models.functional_model' or 'keras.Model')
+    """
+    import sys
+    import types
+    try:
+        import keras
+        # 1. Alias 'keras.src.models.functional'
+        if "keras.src.models.functional" not in sys.modules:
+            try:
+                from keras.src.models import functional_model
+                sys.modules["keras.src.models.functional"] = functional_model
+            except (ImportError, ModuleNotFoundError):
+                mod = types.ModuleType("keras.src.models.functional")
+                mod.Functional = getattr(keras, "Model", None) or getattr(keras.src.models, "Model", None)
+                sys.modules["keras.src.models.functional"] = mod
+
+        # 2. Alias 'keras.src.models.functional_model' if missing
+        if "keras.src.models.functional_model" not in sys.modules:
+            try:
+                from keras.src.models import functional
+                sys.modules["keras.src.models.functional_model"] = functional
+            except (ImportError, ModuleNotFoundError):
+                mod = types.ModuleType("keras.src.models.functional_model")
+                mod.Functional = getattr(keras, "Model", None)
+                sys.modules["keras.src.models.functional_model"] = mod
+
+        # 3. Ensure 'keras.src.engine.functional' legacy compatibility
+        if "keras.src.engine.functional" not in sys.modules:
+            mod = types.ModuleType("keras.src.engine.functional")
+            mod.Functional = getattr(keras, "Model", None)
+            sys.modules["keras.src.engine.functional"] = mod
+
+        log.info("⚡ Keras module paths patched successfully for deserialization compatibility")
+    except Exception as e:
+        log.warning("Keras module path patch warning: %s", e)
+
+
 def load_model():
     global _model
     if _model is not None:
@@ -82,33 +122,36 @@ def load_model():
 
         try:
             import tensorflow as tf
-            log.info("Loading Keras model using TF %s...", tf.__version__)
+            import keras
+            log.info("Loading Keras model using TF %s / Keras %s...", tf.__version__, keras.__version__)
 
-            # Try loading via tf.keras
-            try:
-                _model = tf.keras.models.load_model(model_path, compile=False)
-            except Exception as e1:
-                log.warning("Standard tf.keras load failed (%s), attempting with custom scope...", e1)
+            patch_keras_module_paths()
+
+            from tensorflow.keras.layers import InputLayer, Dense
+            class SafeInputLayer(InputLayer):
+                def __init__(self, *args, **kwargs):
+                    kwargs.pop("optional", None)
+                    kwargs.pop("batch_shape", None)
+                    super().__init__(*args, **kwargs)
+
+            class SafeDense(Dense):
+                def __init__(self, *args, **kwargs):
+                    kwargs.pop("quantization_config", None)
+                    super().__init__(*args, **kwargs)
+
+            custom_objects = {
+                "InputLayer": SafeInputLayer,
+                "Dense": SafeDense,
+                "Functional": keras.Model,
+            }
+
+            # Try loading via tf.keras / keras with custom object scope
+            with keras.saving.custom_object_scope(custom_objects):
                 try:
-                    import keras
-                    from tensorflow.keras.layers import InputLayer, Dense
-                    class SafeInputLayer(InputLayer):
-                        def __init__(self, *args, **kwargs):
-                            kwargs.pop("optional", None)
-                            kwargs.pop("batch_shape", None)
-                            super().__init__(*args, **kwargs)
-
-                    class SafeDense(Dense):
-                        def __init__(self, *args, **kwargs):
-                            kwargs.pop("quantization_config", None)
-                            super().__init__(*args, **kwargs)
-
-                    with keras.saving.custom_object_scope({"InputLayer": SafeInputLayer, "Dense": SafeDense}):
-                        _model = tf.keras.models.load_model(model_path, compile=False)
-                except Exception as e2:
-                    log.warning("Custom scope tf.keras load failed (%s), attempting keras standalone...", e2)
-                    import keras
                     _model = keras.models.load_model(model_path, compile=False)
+                except Exception as e1:
+                    log.warning("Keras load_model failed (%s), attempting tf.keras.models.load_model...", e1)
+                    _model = tf.keras.models.load_model(model_path, compile=False)
 
             log.info("✅ Model successfully loaded from %s", model_path)
 
