@@ -44,8 +44,9 @@ def create_app(config_obj=None):
     cfg = config_obj or get_config()
     app.config.from_object(cfg)
 
-    # Initialize ML Engine
+    # Initialize ML Engine & start background model preloading
     ml_engine.init_engine(app.config)
+    ml_engine.start_background_load()
 
     # ── Middleware ────────────────────────────────────────────────
     Compress(app)
@@ -118,11 +119,21 @@ def create_app(config_obj=None):
 
     @app.route("/health")
     def health():
-        # A lightweight health check to prevent Render from killing the instance 
-        # during heavy TensorFlow model loading.
+        # Dynamic health check returning loaded, ready, or not_loaded
+        is_loaded = ml_engine.is_model_loaded()
+        is_avail  = ml_engine.is_model_available()
+
+        if is_loaded:
+            model_status = "loaded"
+        elif is_avail:
+            model_status = "ready"
+        else:
+            model_status = "not_loaded"
+
         return jsonify({
             "status": "ok",
-            "model": "lazy_loaded",
+            "model": model_status,
+            "is_loaded": is_loaded,
             "version": app.config.get("APP_VERSION"),
         }), 200
 

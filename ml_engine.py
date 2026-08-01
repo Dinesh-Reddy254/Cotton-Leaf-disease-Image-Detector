@@ -30,6 +30,27 @@ def init_engine(app_config: dict):
     }
 
 
+def is_model_loaded() -> bool:
+    """Return True if the Keras model is loaded in memory."""
+    return _model is not None
+
+
+def is_model_available() -> bool:
+    """Return True if model is loaded or model file / HF repo is available."""
+    if _model is not None:
+        return True
+    model_path = _config.get("MODEL_PATH")
+    if model_path and os.path.exists(model_path):
+        return True
+    return bool(_config.get("HF_REPO_ID"))
+
+
+def start_background_load():
+    """Asynchronously load model in a daemon thread on server startup."""
+    t = threading.Thread(target=load_model, daemon=True, name="ml_background_loader")
+    t.start()
+
+
 def load_model():
     global _model
     if _model is not None:
@@ -88,6 +109,16 @@ def load_model():
                     _model = keras.models.load_model(model_path)
 
             log.info("✅ Model loaded from %s", model_path)
+
+            # Pre-warm TensorFlow execution graph to eliminate cold-start latency on first request
+            try:
+                from tensorflow.keras.applications.efficientnet import preprocess_input
+                dummy = preprocess_input(np.zeros((1, 224, 224, 3), dtype=np.float32))
+                _model.predict(dummy, verbose=0)
+                log.info("⚡ TensorFlow execution graph pre-warmed successfully")
+            except Exception as w_err:
+                log.warning("Model graph warm-up warning: %s", w_err)
+
         except Exception as exc:
             log.error("❌ Model load failed: %s", exc)
             _model = None
@@ -116,8 +147,8 @@ def _check_ood(img: Image.Image) -> dict:
         # Use ViT ImageNet model on HF free inference API
         API_URL = "https://api-inference.huggingface.co/models/google/vit-base-patch16-224"
         
-        # 5 second timeout to prevent hanging the web server
-        response = requests.post(API_URL, data=data, timeout=5)
+        # 2 second timeout to ensure max diagnosis time stays < 5 seconds
+        response = requests.post(API_URL, data=data, timeout=2)
         
         if response.status_code == 200:
             result = response.json()

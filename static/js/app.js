@@ -604,7 +604,8 @@
       const data = await res.json();
       const dot    = $("modelDot");
       const status = $("modelStatus");
-      if (data.model !== "loaded") {
+      const isHealthy = data.model === "loaded" || data.model === "ready" || data.model === "lazy_loaded";
+      if (!isHealthy) {
         if (dot)    { dot.style.background = "hsl(28,88%,58%)"; dot.classList.add("offline"); }
         if (status) { status.textContent = t("model_not_loaded") || "No Model"; }
       } else {
@@ -625,5 +626,6 @@
   // ── INITIALIZE ────────────────────────────────────────────────────
   applyLanguage(currentLang);
   loadHistory();
+  setInterval(checkModelStatus, 10000);
 
 })();
