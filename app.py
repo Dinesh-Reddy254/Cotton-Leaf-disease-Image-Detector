@@ -44,9 +44,8 @@ def create_app(config_obj=None):
     cfg = config_obj or get_config()
     app.config.from_object(cfg)
 
-    # Initialize ML Engine & start background model preloading
+    # Initialize ML Engine
     ml_engine.init_engine(app.config)
-    ml_engine.start_background_load()
 
     # ── Middleware ────────────────────────────────────────────────
     Compress(app)

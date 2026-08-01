@@ -45,12 +45,6 @@ def is_model_available() -> bool:
     return bool(_config.get("HF_REPO_ID"))
 
 
-def start_background_load():
-    """Asynchronously load model in a daemon thread on server startup."""
-    t = threading.Thread(target=load_model, daemon=True, name="ml_background_loader")
-    t.start()
-
-
 def load_model():
     global _model
     if _model is not None:
