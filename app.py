@@ -174,9 +174,10 @@ def create_app(config_obj=None):
 app = create_app()
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     if os.environ.get("FLASK_ENV") == "production":
         from waitress import serve
-        log.info("Starting production server (waitress)…")
-        serve(app, host="0.0.0.0", port=5000, threads=8)
+        log.info(f"Starting production server (waitress) on port {port}…")
+        serve(app, host="0.0.0.0", port=port, threads=4)
     else:
-        app.run(debug=True, host="0.0.0.0", port=5000)
+        app.run(debug=True, host="0.0.0.0", port=port)

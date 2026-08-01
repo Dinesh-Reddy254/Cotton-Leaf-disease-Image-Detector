@@ -27,10 +27,9 @@ EXPOSE 5000
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-5000}/health || exit 1
 
 CMD ["gunicorn", "app:app", \
      "-c", "gunicorn.conf.py", \
-     "--bind", "0.0.0.0:5000", \
      "--access-logfile", "-", \
      "--error-logfile", "-"]
