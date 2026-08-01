@@ -19,7 +19,7 @@ redis==5.0.4
 
 
 # ── Machine Learning ──────────────────────────────────────────
-tensorflow-cpu==2.16.1
+tensorflow-cpu==2.15.1
 
 # ── Image Processing ──────────────────────────────────────────
 numpy==1.26.4

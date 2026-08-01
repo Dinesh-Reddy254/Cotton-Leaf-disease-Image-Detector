@@ -82,27 +82,35 @@ def load_model():
 
         try:
             import tensorflow as tf
-            import keras
-            from tensorflow.keras.layers import InputLayer, Dense
+            log.info("Loading Keras model using TF %s...", tf.__version__)
 
-            class SafeInputLayer(InputLayer):
-                def __init__(self, *args, **kwargs):
-                    kwargs.pop("optional", None)
-                    kwargs.pop("batch_shape", None)
-                    super().__init__(*args, **kwargs)
-
-            class SafeDense(Dense):
-                def __init__(self, *args, **kwargs):
-                    kwargs.pop("quantization_config", None)
-                    super().__init__(*args, **kwargs)
-
-            with keras.saving.custom_object_scope({"InputLayer": SafeInputLayer, "Dense": SafeDense}):
+            # Try loading via tf.keras
+            try:
+                _model = tf.keras.models.load_model(model_path, compile=False)
+            except Exception as e1:
+                log.warning("Standard tf.keras load failed (%s), attempting with custom scope...", e1)
                 try:
-                    _model = tf.keras.models.load_model(model_path, compile=False)
-                except Exception:
-                    _model = keras.models.load_model(model_path)
+                    import keras
+                    from tensorflow.keras.layers import InputLayer, Dense
+                    class SafeInputLayer(InputLayer):
+                        def __init__(self, *args, **kwargs):
+                            kwargs.pop("optional", None)
+                            kwargs.pop("batch_shape", None)
+                            super().__init__(*args, **kwargs)
 
-            log.info("✅ Model loaded from %s", model_path)
+                    class SafeDense(Dense):
+                        def __init__(self, *args, **kwargs):
+                            kwargs.pop("quantization_config", None)
+                            super().__init__(*args, **kwargs)
+
+                    with keras.saving.custom_object_scope({"InputLayer": SafeInputLayer, "Dense": SafeDense}):
+                        _model = tf.keras.models.load_model(model_path, compile=False)
+                except Exception as e2:
+                    log.warning("Custom scope tf.keras load failed (%s), attempting keras standalone...", e2)
+                    import keras
+                    _model = keras.models.load_model(model_path, compile=False)
+
+            log.info("✅ Model successfully loaded from %s", model_path)
 
             # Pre-warm TensorFlow execution graph to eliminate cold-start latency on first request
             try:
@@ -114,7 +122,7 @@ def load_model():
                 log.warning("Model graph warm-up warning: %s", w_err)
 
         except Exception as exc:
-            log.error("❌ Model load failed: %s", exc)
+            log.error("❌ Model load failed completely: %s", exc, exc_info=True)
             _model = None
 
         return _model
