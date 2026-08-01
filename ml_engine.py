@@ -45,46 +45,6 @@ def is_model_available() -> bool:
     return bool(_config.get("HF_REPO_ID"))
 
 
-def patch_keras_module_paths():
-    """
-    Patch sys.modules to handle Keras internal module name migrations
-    (e.g., 'keras.src.models.functional' -> 'keras.src.models.functional_model' or 'keras.Model')
-    """
-    import sys
-    import types
-    try:
-        import keras
-        # 1. Alias 'keras.src.models.functional'
-        if "keras.src.models.functional" not in sys.modules:
-            try:
-                from keras.src.models import functional_model
-                sys.modules["keras.src.models.functional"] = functional_model
-            except (ImportError, ModuleNotFoundError):
-                mod = types.ModuleType("keras.src.models.functional")
-                mod.Functional = getattr(keras, "Model", None) or getattr(keras.src.models, "Model", None)
-                sys.modules["keras.src.models.functional"] = mod
-
-        # 2. Alias 'keras.src.models.functional_model' if missing
-        if "keras.src.models.functional_model" not in sys.modules:
-            try:
-                from keras.src.models import functional
-                sys.modules["keras.src.models.functional_model"] = functional
-            except (ImportError, ModuleNotFoundError):
-                mod = types.ModuleType("keras.src.models.functional_model")
-                mod.Functional = getattr(keras, "Model", None)
-                sys.modules["keras.src.models.functional_model"] = mod
-
-        # 3. Ensure 'keras.src.engine.functional' legacy compatibility
-        if "keras.src.engine.functional" not in sys.modules:
-            mod = types.ModuleType("keras.src.engine.functional")
-            mod.Functional = getattr(keras, "Model", None)
-            sys.modules["keras.src.engine.functional"] = mod
-
-        log.info("⚡ Keras module paths patched successfully for deserialization compatibility")
-    except Exception as e:
-        log.warning("Keras module path patch warning: %s", e)
-
-
 def load_model():
     global _model
     if _model is not None:
@@ -106,7 +66,6 @@ def load_model():
                 try:
                     from huggingface_hub import hf_hub_download
                     hf_token = _config.get("HF_TOKEN")
-                    # Attempt download with configured filename, or fallback to basename
                     try:
                         model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename, token=hf_token)
                     except Exception:
@@ -121,51 +80,22 @@ def load_model():
                 return None
 
         try:
-            import tensorflow as tf
             import keras
-            log.info("Loading Keras model using TF %s / Keras %s...", tf.__version__, keras.__version__)
+            log.info("Loading model with Keras %s ...", keras.__version__)
 
-            patch_keras_module_paths()
+            _model = keras.models.load_model(model_path, compile=False)
+            log.info("✅ Model loaded from %s", model_path)
 
-            from tensorflow.keras.layers import InputLayer, Dense
-            class SafeInputLayer(InputLayer):
-                def __init__(self, *args, **kwargs):
-                    kwargs.pop("optional", None)
-                    kwargs.pop("batch_shape", None)
-                    super().__init__(*args, **kwargs)
-
-            class SafeDense(Dense):
-                def __init__(self, *args, **kwargs):
-                    kwargs.pop("quantization_config", None)
-                    super().__init__(*args, **kwargs)
-
-            custom_objects = {
-                "InputLayer": SafeInputLayer,
-                "Dense": SafeDense,
-                "Functional": keras.Model,
-            }
-
-            # Try loading via tf.keras / keras with custom object scope
-            with keras.saving.custom_object_scope(custom_objects):
-                try:
-                    _model = keras.models.load_model(model_path, compile=False)
-                except Exception as e1:
-                    log.warning("Keras load_model failed (%s), attempting tf.keras.models.load_model...", e1)
-                    _model = tf.keras.models.load_model(model_path, compile=False)
-
-            log.info("✅ Model successfully loaded from %s", model_path)
-
-            # Pre-warm TensorFlow execution graph to eliminate cold-start latency on first request
+            # Pre-warm execution graph to eliminate cold-start latency
             try:
-                from tensorflow.keras.applications.efficientnet import preprocess_input
-                dummy = preprocess_input(np.zeros((1, 224, 224, 3), dtype=np.float32))
+                dummy = np.zeros((1, 224, 224, 3), dtype=np.float32)
                 _model.predict(dummy, verbose=0)
-                log.info("⚡ TensorFlow execution graph pre-warmed successfully")
+                log.info("⚡ Execution graph pre-warmed successfully")
             except Exception as w_err:
-                log.warning("Model graph warm-up warning: %s", w_err)
+                log.warning("Warm-up warning (non-fatal): %s", w_err)
 
         except Exception as exc:
-            log.error("❌ Model load failed completely: %s", exc, exc_info=True)
+            log.error("❌ Model load failed: %s", exc, exc_info=True)
             _model = None
 
         return _model
