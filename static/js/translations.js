@@ -2,7 +2,7 @@
    CottonGreen AI — Multilingual Translations (EN / TE / HI)
    ═══════════════════════════════════════════════════════════════ */
 
-const TRANSLATIONS = {
+window.TRANSLATIONS = {
 
   // ─────────────────────────────────────────────────────────────
   // ENGLISH
@@ -38,472 +38,311 @@ const TRANSLATIONS = {
     tip_4: "📱 Phone camera works perfectly",
     idle_text: "Select a cotton leaf image to begin AI analysis",
     ready_text: "Image ready for analysis",
-    btn_analyze: "🔍 Analyze Leaf",
+    btn_start: "Start Diagnosis →",
+    btn_analyze: "Analyze Leaf",
     btn_analyzing: "Analyzing...",
-    ready_hint: "This may take a few seconds",
-    btn_remove_title: "Remove",
-    btn_camera: "📷 Take Photo",
-    btn_capture: "📸 Capture",
-    btn_close_camera: "✕ Close Camera",
-
-    // Result Card
-    result_label: "Result",
-    confidence_label: "Confidence",
-    desc_heading: "📋 Description",
-    treatment_heading: "🩺 Treatment",
-    prevention_heading: "🛡️ Prevention",
-    chart_heading: "📊 All Class Probabilities",
-    top3_heading: "🏅 Top 3 Predictions",
-    btn_new: "🔄 Analyze Another Image",
-    btn_print: "🖨️ Download Report",
+    btn_new: "New Diagnosis",
+    btn_print: "Print Report",
+    btn_retry: "Try Again",
+    err_title: "Diagnosis Failed",
+    
+    // Result
+    res_title: "Diagnosis Complete",
+    res_conf: "CONFIDENCE",
+    res_desc: "DESCRIPTION",
+    res_cause: "CAUSE",
+    res_treat: "TREATMENT & REMEDIES",
+    res_other: "OTHER POSSIBILITIES",
 
     // History
-    history_title: "Recent Scans",
-    history_empty: "No recent scans found.",
-    btn_clear_history: "🗑️ Clear History",
-
-    // Error
-    error_default: "An error occurred",
-    btn_retry: "Try Again",
-    err_invalid_image: "Please select a valid image file (JPG, PNG, WebP).",
-    err_file_too_large: "File is too large. Maximum size is 16 MB.",
-    err_network: "Network error. Make sure the server is running and try again.",
-
-    // OOD Detection
-    ood_title: "Not a Cotton Leaf",
-    ood_what_detected: "What We Detected",
-    ood_explanation: "Our AI system analyzed your image and identified it as \"{{label}}\" with {{conf}}% confidence. This application is specifically designed to diagnose diseases in cotton plant leaves only. The uploaded image does not appear to be a cotton leaf, so we cannot provide a reliable disease diagnosis. Please upload a clear photograph of a cotton leaf for accurate results.",
-    ood_purpose_title: "Purpose of This App",
-    ood_purpose_desc: "CottonGreen AI is specifically designed and trained to diagnose diseases in cotton plant leaves only. It uses an EfficientNetB3 model trained on 7 cotton leaf disease categories.",
-    ood_tips_title: "Tips for Best Results",
-    ood_tip_1: "Upload a clear photo of a single cotton leaf",
-    ood_tip_2: "Make sure the leaf fills most of the image frame",
-    ood_tip_3: "Use good lighting \u2014 avoid shadows and glare",
-    ood_tip_4: "Avoid including other objects, hands, or backgrounds",
-    ood_supported_title: "Supported Disease Classes",
-
-    // Diseases Section
-    diseases_title: "Detectable Diseases",
-    diseases_subtitle: "Our model is trained to detect 7 cotton leaf conditions",
-
-    // About Section
-    about_title: "About the Model",
-    about_p1: "This system uses an EfficientNetB3-based deep learning model, fine-tuned using transfer learning for cotton leaf disease classification.",
-    about_p2: "The model is optimized for real-world agricultural conditions, ensuring robust performance across multiple disease categories.",
-    spec_backbone: "Backbone",
-    spec_backbone_val: "EfficientNetB3",
-    spec_input: "Input Size",
-    spec_input_val: "224 × 224 RGB",
-    spec_classes: "Classes",
-    spec_classes_val: "7 disease categories",
-    spec_accuracy: "Accuracy",
-    spec_accuracy_val: "~98.7%",
-    arch_title: "Architecture",
-    arch_1: "📷 Input Image (224×224)",
-    arch_2: "🧠 EfficientNetV2L Backbone",
-    arch_3: "🔄 Fine-Tuned Layers",
-    arch_4: "📊 Global Average Pooling",
-    arch_5: "🔗 Dense(512) → Dense(256)",
-    arch_6: "🎯 7-Class Softmax Output",
+    hist_title: "Recent Diagnoses",
+    hist_empty: "No diagnoses yet. Upload an image to see your history here.",
+    
+    // About
+    about_title: "About CottonGreen AI",
+    about_p1: "CottonGreen AI is built to help farmers rapidly identify cotton leaf diseases. By combining deep learning with a simple web interface, we aim to reduce crop loss and promote sustainable farming practices.",
+    about_p2: "This project uses an EfficientNetB3 model trained on thousands of labeled cotton leaves.",
 
     // Footer
-    footer_built: "Built with EfficientNetV2L · Deep Learning-based Disease Detection System",
-    footer_note: "For agricultural research and early disease management",
+    foot_made: "Made for Cotton Farmers everywhere.",
+    
+    // Dynamic JS
+    model_loading: "Waking up model...",
+    error_network: "Network error. Please try again.",
+    error_upload: "Failed to process image.",
 
-    // Disease Info (keyed by English class name)
     diseases: {
+      "Aphids": {
+        name: "Aphids",
+        desc: "Small sap-sucking insects that cause leaves to curl and turn yellow.",
+        cause: "Infestation by aphids (Aphis gossypii), often exacerbated by dry, warm weather.",
+        treatment: "Use neem oil or insecticidal soap. Introduce ladybugs. For severe cases, use Imidacloprid."
+      },
+      "Army worm": {
+        name: "Army Worm",
+        desc: "Caterpillars that consume leaf tissue, leaving skeletonized foliage.",
+        cause: "Larvae of the Spodoptera frugiperda moth laying eggs on cotton leaves.",
+        treatment: "Apply Bacillus thuringiensis (Bt) or Spinosad. Remove heavily infested leaves."
+      },
       "Bacterial Blight": {
         name: "Bacterial Blight",
-        severity: "High",
-        severity_label: "High Risk",
-        description: "Caused by Xanthomonas citri pv. malvacearum. Produces angular water-soaked lesions on cotton leaves.",
-        treatment: "Apply copper-based bactericides (copper oxychloride). Remove and destroy infected plant debris immediately.",
-        prevention: "Use certified disease-free seeds, practice crop rotation every 2–3 seasons, avoid overhead irrigation.",
-        card_desc: "Angular water-soaked lesions caused by Xanthomonas bacteria",
+        desc: "Dark, water-soaked angular spots on leaves that turn black.",
+        cause: "Xanthomonas citri bacteria spreading via rain splash or infected seeds.",
+        treatment: "Apply copper-based fungicides. Ensure good field drainage. Plant resistant varieties."
       },
-      "Curl Virus": {
-        name: "Curl Virus",
-        severity: "Very High",
-        severity_label: "Very High Risk",
-        description: "Cotton Leaf Curl Disease (CLCuD) transmitted by whitefly Bemisia tabaci. Causes severe leaf curling and stunting.",
-        treatment: "No cure once infected. Apply imidacloprid or thiamethoxam to control whitefly vectors immediately.",
-        prevention: "Plant CLCuD-resistant cultivars, remove infected plants early, install yellow sticky traps.",
-        card_desc: "Severe leaf curling by CLCuD transmitted via whitefly",
-      },
-      "Fusarium Wilt": {
-        name: "Fusarium Wilt",
-        severity: "High",
-        severity_label: "High Risk",
-        description: "Soil-borne fungal disease caused by Fusarium oxysporum f. sp. vasinfectum. Causes vascular wilting.",
-        treatment: "No effective chemical treatment. Remove infected plants and solarize soil.",
-        prevention: "Use resistant varieties, practice crop rotation, maintain soil health.",
-        card_desc: "Soil-borne fungal disease causing vascular wilting",
-      },
-      "Healthy Leaf": {
-        name: "Healthy Leaf",
-        severity: "None",
-        severity_label: "No Risk",
-        description: "No disease detected. The cotton leaf appears healthy with normal colouration and structure.",
-        treatment: "No treatment required. Continue current agricultural management practices.",
-        prevention: "Maintain balanced NPK fertilisation, regular scouting every 7–10 days, proper irrigation schedule.",
-        card_desc: "Normal, disease-free cotton leaf in good condition",
-      },
-      "Herbicide Growth Damage": {
-        name: "Herbicide Damage",
-        severity: "Medium",
-        severity_label: "Medium Risk",
-        description: "Abnormal leaf growth and distortion caused by herbicide drift, over-application, or residue toxicity.",
-        treatment: "Flush soil thoroughly with water. Apply activated charcoal around roots if detected within 48 hrs.",
-        prevention: "Calibrate sprayers accurately, avoid spraying on windy days, use buffer zones around fields.",
-        card_desc: "Growth distortion from herbicide drift or misapplication",
-      },
-      "Leaf Hopper Jassids": {
-        name: "Leaf Hopper Jassids",
-        severity: "Medium",
-        severity_label: "Medium Risk",
-        description: "Damage by Amrasca biguttula biguttula causing leaf yellowing, bronzing, and upward curling.",
-        treatment: "Spray imidacloprid 17.8 SL (0.5 ml/L) or lambda-cyhalothrin. Apply neem oil (3%) as alternate.",
-        prevention: "Introduce natural predators (Chrysoperla), use yellow sticky traps, plant resistant varieties.",
-        card_desc: "Leaf yellowing and bronzing from jassid pest feeding",
+      "Healthy": {
+        name: "Healthy Cotton",
+        desc: "No visible signs of disease or pest infestation.",
+        cause: "Optimal growing conditions and good crop management.",
+        treatment: "Maintain current irrigation and nutrient schedule."
       },
       "Leaf Redding": {
         name: "Leaf Redding",
-        severity: "Low–Medium",
-        severity_label: "Low–Medium",
-        description: "Reddening of cotton leaves due to potassium or magnesium deficiency, or physiological stress.",
-        treatment: "Apply potassium sulphate (SOP) at 20 kg/acre. Foliar spray of 1% KNO₃ solution on leaves.",
-        prevention: "Conduct soil testing before planting, maintain soil pH 6.0–7.0, ensure balanced fertilisation.",
-        card_desc: "Reddish discolouration from potassium deficiency or stress",
+        desc: "Leaves turn red/purple starting from the margins.",
+        cause: "Magnesium/Nitrogen deficiency, water stress, or sudden temperature drops.",
+        treatment: "Apply Magnesium Sulfate (Epsom salt) foliar spray. Ensure consistent watering."
       },
-      "Leaf Variegation": {
-        name: "Leaf Variegation",
-        severity: "Medium",
-        severity_label: "Medium Risk",
-        description: "Mosaic-like colour patterns (yellow-green patches) caused by viral infections or genetic mutation.",
-        treatment: "Control aphid and whitefly vectors. Remove heavily infected plants to prevent spread.",
-        prevention: "Use certified virus-free seed, plant disease-free transplants, control insect vectors early.",
-        card_desc: "Mosaic colour patterns from viral infection or genetics",
+      "Powdery Mildew": {
+        name: "Powdery Mildew",
+        desc: "White, powdery fungal growth on the upper and lower leaf surfaces.",
+        cause: "Ramularia areola fungus thriving in high humidity and warm temperatures.",
+        treatment: "Apply sulfur-based fungicides or appropriate triazole sprays. Improve air circulation."
       },
-    },
+      "Target Spot": {
+        name: "Target Spot",
+        desc: "Concentric circular lesions resembling a target board, causing premature defoliation.",
+        cause: "Corynespora cassiicola fungus favored by extended periods of leaf wetness.",
+        treatment: "Apply protective fungicides like Pyraclostrobin before canopy closure."
+      },
+      "Not a Cotton Leaf": {
+        name: "Not a Cotton Leaf",
+        desc: "This image does not appear to be a plant or cotton leaf.",
+        cause: "Our AI detected that this image is out of distribution.",
+        treatment: "Please upload a clear picture of a cotton leaf."
+      }
+    }
   },
 
   // ─────────────────────────────────────────────────────────────
-  // TELUGU (తెలుగు)
+  // TELUGU
   // ─────────────────────────────────────────────────────────────
   te: {
-    nav_diagnose: "రోగ నిర్ధారణ",
+    nav_diagnose: "వ్యాధి నిర్ధారణ",
     nav_diseases: "వ్యాధులు",
     nav_history: "చరిత్ర",
     nav_about: "గురించి",
-    model_ready: "మోడల్ సిద్ధం",
-    model_not_loaded: "మోడల్ లేదు",
+    model_ready: "సిద్ధంగా ఉంది",
+    model_not_loaded: "సిద్ధంగా లేదు",
 
     hero_tag: "🤖 డీప్ లెర్నింగ్ · EfficientNetB3",
     hero_title_1: "AI-ఆధారిత పత్తి ఆకు",
-    hero_title_2: "వ్యాధుల గుర్తింపు",
-    hero_sub: "పత్తి ఆకు ఫోటోను అప్‌లోడ్ చేయండి, AI-ఆధారిత వ్యాధి నిర్ధారణ, నమ్మకం స్కోర్‌లు మరియు చికిత్స సిఫార్సులను పొందండి.",
-    stat_classes: "వ్యాధి తరగతులు",
-    stat_accuracy: "పరీక్ష ఖచ్చితత్వం",
-    stat_realtime: "రియల్-టైమ్",
-    stat_prediction: "అంచనా",
+    hero_title_2: "వ్యాధి గుర్తింపు",
+    hero_sub: "AI-ఆధారిత వ్యాధి నిర్ధారణ మరియు చికిత్స సిఫార్సులను పొందడానికి పత్తి ఆకు ఫోటోను అప్‌లోడ్ చేయండి.",
+    stat_classes: "వ్యాధి రకాలు",
+    stat_accuracy: "ఖచ్చితత్వం",
+    stat_realtime: "తక్షణ",
+    stat_prediction: "ఫలితం",
     hero_card_label: "AI విశ్లేషణ",
 
     upload_title: "ఆకు చిత్రాన్ని అప్‌లోడ్ చేయండి",
-    upload_subtitle: "పత్తి ఆకు ఫోటోను డ్రాగ్ & డ్రాప్ చేయండి లేదా ఎంచుకోండి (JPG, PNG, WebP)",
-    drop_text_strong: "మీ చిత్రాన్ని ఇక్కడ డ్రాగ్ & డ్రాప్ చేయండి",
-    drop_text_span: "లేదా ఫైళ్ళను బ్రౌజ్ చేయడానికి క్లిక్ చేయండి",
-    drop_hint: "JPG · PNG · WebP · గరిష్టంగా 16MB",
-    tip_1: "📸 స్పష్టమైన, బాగా వెలిగించిన చిత్రాలను ఉపయోగించండి",
-    tip_2: "🍃 ఆకు ఫ్రేమ్‌లో ఎక్కువ భాగం ఉండేలా చూడండి",
-    tip_3: "🔍 అస్పష్టమైన లేదా చీకటి ఫోటోలను నివారించండి",
-    tip_4: "📱 ఫోన్ కెమెరా సరిగ్గా పనిచేస్తుంది",
+    upload_subtitle: "పత్తి ఆకు ఫోటోను ఎంచుకోవడానికి ఇక్కడ క్లిక్ చేయండి",
+    drop_text_strong: "చిత్రాన్ని ఇక్కడ లాగి వదలండి",
+    drop_text_span: "లేదా ఫైళ్లను బ్రౌజ్ చేయడానికి క్లిక్ చేయండి",
+    drop_hint: "JPG · PNG · WebP · Max 16MB",
+    tip_1: "📸 స్పష్టమైన, మంచి కాంతి ఉన్న చిత్రాలను ఉపయోగించండి",
+    tip_2: "🍃 ఆకు ఫ్రేమ్ మొత్తాన్ని నింపేలా చూసుకోండి",
+    tip_3: "🔍 అస్పష్టంగా ఉన్న ఫోటోలను నివారించండి",
+    tip_4: "📱 ఫోన్ కెమెరా అద్భుతంగా పనిచేస్తుంది",
     idle_text: "AI విశ్లేషణ ప్రారంభించడానికి పత్తి ఆకు చిత్రాన్ని ఎంచుకోండి",
-    ready_text: "చిత్రం విశ్లేషణకు సిద్ధం",
-    btn_analyze: "🔍 ఆకును విశ్లేషించండి",
+    ready_text: "విశ్లేషణకు చిత్రం సిద్ధంగా ఉంది",
+    btn_start: "నిర్ధారణ ప్రారంభించండి →",
+    btn_analyze: "ఆకును విశ్లేషించండి",
     btn_analyzing: "విశ్లేషిస్తోంది...",
-    ready_hint: "ఇది కొన్ని సెకన్లు పట్టవచ్చు",
-    btn_remove_title: "తొలగించు",
-    btn_camera: "📷 ఫోటో తీయండి",
-    btn_capture: "📸 క్యాప్చర్ చేయండి",
-    btn_close_camera: "✕ కెమెరా మూసివేయి",
-
-    result_label: "ఫలితం",
-    confidence_label: "నమ్మకం",
-    desc_heading: "📋 వివరణ",
-    treatment_heading: "🩺 చికిత్స",
-    prevention_heading: "🛡️ నివారణ",
-    chart_heading: "📊 అన్ని తరగతి సంభావ్యతలు",
-    top3_heading: "🏅 టాప్ 3 అంచనాలు",
-    btn_new: "🔄 మరొక చిత్రాన్ని విశ్లేషించండి",
-    btn_print: "🖨️ నివేదికను డౌన్‌లోడ్ చేయండి",
-    history_title: "ఇటీవలి స్కాన్‌లు",
-    history_empty: "ఇటీవలి స్కాన్‌లు ఏవీ కనుగొనబడలేదు.",
-    btn_clear_history: "🗑️ చరిత్రను క్లియర్ చేయండి",
-
-    error_default: "లోపం సంభవించింది",
+    btn_new: "కొత్త నిర్ధారణ",
+    btn_print: "రిపోర్ట్ ప్రింట్ చేయండి",
     btn_retry: "మళ్ళీ ప్రయత్నించండి",
-    err_invalid_image: "దయచేసి చెల్లుబాటు అయ్యే చిత్ర ఫైల్‌ను ఎంచుకోండి (JPG, PNG, WebP).",
-    err_file_too_large: "ఫైల్ చాలా పెద్దది. గరిష్ట పరిమాణం 16 MB.",
-    err_network: "నెట్‌వర్క్ లోపం. సర్వర్ రన్ అవుతుందో నిర్ధారించుకుని మళ్ళీ ప్రయత్నించండి.",
+    err_title: "నిర్ధారణ విఫలమైంది",
+    
+    res_title: "నిర్ధారణ పూర్తయింది",
+    res_conf: "ఖచ్చితత్వం (CONFIDENCE)",
+    res_desc: "వివరణ",
+    res_cause: "కారణం",
+    res_treat: "చికిత్స & నివారణ చర్యలు",
+    res_other: "ఇతర అవకాశాలు",
 
-    diseases_title: "గుర్తించగలిగే వ్యాధులు",
-    diseases_subtitle: "మా మోడల్ 7 పత్తి ఆకు పరిస్థితులను గుర్తించడానికి శిక్షణ పొందింది",
-
-    about_title: "మోడల్ గురించి",
-    about_p1: "ఈ వ్యవస్థ EfficientNetB3-ఆధారిత డీప్ లెర్నింగ్ మోడల్‌ను ఉపయోగిస్తుంది, పత్తి ఆకు వ్యాధి వర్గీకరణ కోసం ట్రాన్స్ఫర్ లెర్నింగ్‌తో ఫైన్-ట్యూన్ చేయబడింది.",
-    about_p2: "వాస్తవ వ్యవసాయ పరిస్థితుల కోసం మోడల్ ఆప్టిమైజ్ చేయబడింది, బహుళ వ్యాధి వర్గాలలో పటిష్టమైన పనితీరును నిర్ధారిస్తుంది.",
-    spec_backbone: "బ్యాక్‌బోన్",
-    spec_backbone_val: "EfficientNetB3",
-    spec_input: "ఇన్‌పుట్ పరిమాణం",
-    spec_input_val: "224 × 224 RGB",
-    spec_classes: "తరగతులు",
-    spec_classes_val: "7 వ్యాధి వర్గాలు",
-    spec_accuracy: "ఖచ్చితత్వం",
-    spec_accuracy_val: "~98.7%",
-    arch_title: "ఆర్కిటెక్చర్",
-    arch_1: "📷 ఇన్‌పుట్ చిత్రం (224×224)",
-    arch_2: "🧠 EfficientNetV2L బ్యాక్‌బోన్",
-    arch_3: "🔄 ఫైన్-ట్యూన్డ్ లేయర్లు",
-    arch_4: "📊 గ్లోబల్ యావరేజ్ పూలింగ్",
-    arch_5: "🔗 Dense(512) → Dense(256)",
-    arch_6: "🎯 7-తరగతి సాఫ్ట్‌మాక్స్ అవుట్‌పుట్",
-
-    footer_built: "EfficientNetV2L తో నిర్మించబడింది · డీప్ లెర్నింగ్-ఆధారిత వ్యాధి గుర్తింపు వ్యవస్థ",
-    footer_note: "వ్యవసాయ పరిశోధన మరియు ముందస్తు వ్యాధి నిర్వహణ కోసం",
+    hist_title: "ఇటీవలి నిర్ధారణలు",
+    hist_empty: "ఇంకా నిర్ధారణలు లేవు. మీ చరిత్రను చూడటానికి చిత్రాన్ని అప్‌లోడ్ చేయండి.",
+    
+    about_title: "CottonGreen AI గురించి",
+    about_p1: "రైతులకు పత్తి ఆకు వ్యాధులను త్వరగా గుర్తించడంలో సహాయపడటానికి CottonGreen AI నిర్మించబడింది.",
+    about_p2: "ఈ ప్రాజెక్ట్ వేలాది పత్తి ఆకులపై శిక్షణ పొందిన మోడల్‌ను ఉపయోగిస్తుంది.",
+    foot_made: "ప్రపంచవ్యాప్తంగా ఉన్న పత్తి రైతుల కోసం రూపొందించబడింది.",
+    
+    model_loading: "మోడల్ లోడ్ అవుతోంది...",
+    error_network: "నెట్‌వర్క్ లోపం. దయచేసి మళ్లీ ప్రయత్నించండి.",
+    error_upload: "చిత్రాన్ని ప్రాసెస్ చేయడం విఫలమైంది.",
 
     diseases: {
+      "Aphids": {
+        name: "పేనుబంక (Aphids)",
+        desc: "చిన్న పురుగులు ఆకు రసాన్ని పీల్చడం వల్ల ఆకులు ముడతలు పడి పసుపు రంగులోకి మారుతాయి.",
+        cause: "పొడి మరియు వెచ్చని వాతావరణం వల్ల అఫిడ్స్ ఉధృతి పెరుగుతుంది.",
+        treatment: "వేప నూనె వాడండి. తీవ్రంగా ఉంటే ఇమిడాక్లోప్రిడ్ పిచికారీ చేయండి."
+      },
+      "Army worm": {
+        name: "లద్దెపురుగు (Army Worm)",
+        desc: "గొంగళి పురుగులు ఆకు కణజాలాన్ని తిని ఆకులను అస్థిపంజరంగా మారుస్తాయి.",
+        cause: "స్పోడోప్టెరా మోత్ పత్తి ఆకులపై గుడ్లు పెట్టడం వల్ల.",
+        treatment: "బాసిల్లస్ తురింజియెన్సిస్ (Bt) లేదా స్పినోసాడ్ వాడండి."
+      },
       "Bacterial Blight": {
-        name: "బాక్టీరియల్ బ్లైట్",
-        severity: "అధికం",
-        severity_label: "అధిక ప్రమాదం",
-        description: "Xanthomonas citri pv. malvacearum వల్ల సంభవిస్తుంది. పత్తి ఆకులపై కోణాకార నీటి-తడిసిన గాయాలను ఉత్పత్తి చేస్తుంది.",
-        treatment: "రాగి-ఆధారిత బాక్టీరిసైడ్లను (కాపర్ ఆక్సీక్లోరైడ్) వాడండి. సంక్రమిత మొక్కల అవశేషాలను వెంటనే తొలగించి నాశనం చేయండి.",
-        prevention: "ధృవీకరించబడిన వ్యాధి-రహిత విత్తనాలను ఉపయోగించండి, ప్రతి 2-3 సీజన్లకు పంట మార్పిడి చేయండి, ఓవర్‌హెడ్ సేద్యాన్ని నివారించండి.",
-        card_desc: "Xanthomonas బాక్టీరియా వల్ల కలిగే కోణాకార నీటి-తడిసిన గాయాలు",
+        name: "బాక్టీరియల్ బ్లైట్ (Bacterial Blight)",
+        desc: "ఆకులపై నల్లటి నీటి మచ్చలు ఏర్పడతాయి.",
+        cause: "వర్షపు చినుకుల ద్వారా లేదా వ్యాధిగ్రస్తులైన విత్తనాల ద్వారా వ్యాపిస్తుంది.",
+        treatment: "రాగి ఆధారిత శిలీంద్రనాశకాలను పిచికారీ చేయండి."
       },
-      "Curl Virus": {
-        name: "కర్ల్ వైరస్",
-        severity: "చాలా అధికం",
-        severity_label: "చాలా అధిక ప్రమాదం",
-        description: "తెల్ల ఈగ Bemisia tabaci ద్వారా వ్యాపించే కాటన్ లీఫ్ కర్ల్ డిసీజ్ (CLCuD). తీవ్రమైన ఆకు ముడుచుకుపోవడం మరియు ఎదుగుదల ఆగిపోవడం కలిగిస్తుంది.",
-        treatment: "సంక్రమణ తరువాత నయం లేదు. తెల్ల ఈగ వేక్టర్లను నియంత్రించడానికి ఇమిడాక్లోప్రిడ్ లేదా థయమెథాక్సామ్ వాడండి.",
-        prevention: "CLCuD-నిరోధక రకాలను నాటండి, సంక్రమిత మొక్కలను ముందుగానే తొలగించండి, పసుపు అంటుకునే ట్రాప్‌లను ఏర్పాటు చేయండి.",
-        card_desc: "తెల్ల ఈగ ద్వారా వ్యాపించే CLCuD వల్ల తీవ్రమైన ఆకు ముడుచుకుపోవడం",
-      },
-      "Fusarium Wilt": {
-        name: "ఫ్యూసేరియం విల్ట్",
-        severity: "అధికం",
-        severity_label: "అధిక ప్రమాదం",
-        description: "Fusarium oxysporum f. sp. vasinfectum వల్ల సంభవించే మట్టి ద్వారా వ్యాపించే ఫంగల్ వ్యాధి. వాస్కులర్ వాడిపోవడానికి కారణమవుతుంది.",
-        treatment: "ప్రభావవంతమైన రసాయన చికిత్స లేదు. సంక్రమిత మొక్కలను తొలగించి మట్టిని సోలరైజేషన్ చేయండి.",
-        prevention: "నిరోధక రకాలను ఉపయోగించండి, పంట మార్పిడి చేయండి, మట్టి ఆరోగ్యాన్ని కాపాడండి.",
-        card_desc: "వాస్కులర్ వాడిపోవడానికి కారణమయ్యే మట్టి ద్వారా వ్యాపించే ఫంగల్ వ్యాధి",
-      },
-      "Healthy Leaf": {
-        name: "ఆరోగ్యకరమైన ఆకు",
-        severity: "లేదు",
-        severity_label: "ప్రమాదం లేదు",
-        description: "వ్యాధి కనుగొనబడలేదు. పత్తి ఆకు సాధారణ రంగు మరియు నిర్మాణంతో ఆరోగ్యంగా కనిపిస్తోంది.",
-        treatment: "చికిత్స అవసరం లేదు. ప్రస్తుత వ్యవసాయ నిర్వహణ పద్ధతులను కొనసాగించండి.",
-        prevention: "సమతుల్య NPK ఎరువులు, ప్రతి 7-10 రోజులకు క్రమం తప్పకుండా స్కౌటింగ్, సరైన సేద్యం షెడ్యూల్ నిర్వహించండి.",
-        card_desc: "సాధారణ, వ్యాధి-రహిత, మంచి పరిస్థితిలో ఉన్న పత్తి ఆకు",
-      },
-      "Herbicide Growth Damage": {
-        name: "హర్బిసైడ్ నష్టం",
-        severity: "మధ్యస్థం",
-        severity_label: "మధ్యస్థ ప్రమాదం",
-        description: "హర్బిసైడ్ డ్రిఫ్ట్, అధిక వాడకం లేదా ఆవుల అవశేష విషపూరితం వల్ల అసాధారణ ఆకు ఎదుగుదల మరియు వక్రీకరణ.",
-        treatment: "నేలను నీటితో బాగా కడగండి. 48 గంటలల్లో గుర్తించినట్లయితే వేర్ల చుట్టూ యాక్టివేటెడ్ చార్కోల్ వేయండి.",
-        prevention: "స్ప్రేయర్లను ఖచ్చితంగా క్యాలిబ్రేట్ చేయండి, గాలి వీచే రోజుల్లో స్ప్రే చేయకూడదు, పొలాల చుట్టూ బఫర్ జోన్లు ఉపయోగించండి.",
-        card_desc: "హర్బిసైడ్ డ్రిఫ్ట్ లేదా తప్పుగా వాడటం వల్ల ఎదుగుదల వక్రీకరణ",
-      },
-      "Leaf Hopper Jassids": {
-        name: "లీఫ్ హాపర్ జాసిడ్స్",
-        severity: "మధ్యస్థం",
-        severity_label: "మధ్యస్థ ప్రమాదం",
-        description: "Amrasca biguttula biguttula వల్ల ఆకు పసుపు రంగు, రాగి రంగు మరియు పైకి ముడుచుకుపోవడం కలుగుతుంది.",
-        treatment: "ఇమిడాక్లోప్రిడ్ 17.8 SL (0.5 ml/L) లేదా లాంబ్డా-సైహలోథ్రిన్ స్ప్రే చేయండి. ప్రత్యామ్నాయంగా వేప నూనె (3%) వాడండి.",
-        prevention: "సహజ శత్రువులను (Chrysoperla) పరిచయం చేయండి, పసుపు అంటుకునే ట్రాప్‌లు ఉపయోగించండి, నిరోధక రకాలను నాటండి.",
-        card_desc: "జాసిడ్ పురుగు తినడం వల్ల ఆకు పసుపు రంగు మరియు రాగి రంగు",
+      "Healthy": {
+        name: "ఆరోగ్యకరమైన పత్తి (Healthy)",
+        desc: "వ్యాధి లేదా చీడపీడల సంకేతాలు లేవు.",
+        cause: "మంచి పంట నిర్వహణ.",
+        treatment: "ప్రస్తుత నీటి పారుదల మరియు పోషకాల షెడ్యూల్‌ను కొనసాగించండి."
       },
       "Leaf Redding": {
-        name: "ఆకు ఎరుపెక్కడం",
-        severity: "తక్కువ–మధ్యస్థం",
-        severity_label: "తక్కువ–మధ్యస్థం",
-        description: "పొటాషియం లేదా మెగ్నీషియం లోపం లేదా శారీరక ఒత్తిడి వల్ల పత్తి ఆకులు ఎరుపు రంగులోకి మారడం.",
-        treatment: "ఎకరాకు 20 కిలోల పొటాషియం సల్ఫేట్ (SOP) వేయండి. ఆకులపై 1% KNO₃ ద్రావణంతో ఫోలియర్ స్ప్రే చేయండి.",
-        prevention: "నాటడానికి ముందు మట్టి పరీక్ష నిర్వహించండి, మట్టి pH 6.0-7.0 నిర్వహించండి, సమతుల్య ఎరువులు నిర్ధారించండి.",
-        card_desc: "పొటాషియం లోపం లేదా ఒత్తిడి వల్ల ఎరుపు రంగు మారడం",
+        name: "ఆకు ఎర్రబడటం (Leaf Redding)",
+        desc: "ఆకులు అంచుల నుండి ఎరుపు/ఊదా రంగులోకి మారుతాయి.",
+        cause: "మెగ్నీషియం లోపం లేదా నీటి ఒత్తిడి.",
+        treatment: "మెగ్నీషియం సల్ఫేట్ ఫ్లోలియర్ స్ప్రే చేయండి."
       },
-      "Leaf Variegation": {
-        name: "ఆకు వేరియగేషన్",
-        severity: "మధ్యస్థం",
-        severity_label: "మధ్యస్థ ప్రమాదం",
-        description: "వైరల్ సంక్రమణలు లేదా జన్యు ఉత్పరివర్తన వల్ల మొజాయిక్-లాంటి రంగు నమూనాలు (పసుపు-ఆకుపచ్చ మచ్చలు).",
-        treatment: "ఆఫిడ్ మరియు తెల్ల ఈగ వేక్టర్లను నియంత్రించండి. వ్యాప్తిని నివారించడానికి తీవ్రంగా సంక్రమిత మొక్కలను తొలగించండి.",
-        prevention: "ధృవీకరించబడిన వైరస్-రహిత విత్తనాలను ఉపయోగించండి, వ్యాధి-రహిత నాట్లు నాటండి, పురుగు వేక్టర్లను ముందుగానే నియంత్రించండి.",
-        card_desc: "వైరల్ సంక్రమణ లేదా జన్యుశాస్త్రం వల్ల మొజాయిక్ రంగు నమూనాలు",
+      "Powdery Mildew": {
+        name: "బూజు తెగులు (Powdery Mildew)",
+        desc: "ఆకులపై తెల్లని బూజు లాంటి శిలీంధ్రాల పెరుగుదల.",
+        cause: "అధిక తేమ మరియు వెచ్చని ఉష్ణోగ్రతలు.",
+        treatment: "గంధకం ఆధారిత శిలీంద్రనాశకాలను పిచికారీ చేయండి."
       },
-    },
+      "Target Spot": {
+        name: "టార్గెట్ స్పాట్ (Target Spot)",
+        desc: "ఆకులపై వలయాకారపు మచ్చలు ఏర్పడి ఆకులు రాలిపోతాయి.",
+        cause: "ఆకులు ఎక్కువసేపు తడిచి ఉండటం వల్ల.",
+        treatment: "పైరాక్లోస్ట్రోబిన్ వంటి శిలీంద్రనాశకాలను వాడండి."
+      },
+      "Not a Cotton Leaf": {
+        name: "పత్తి ఆకు కాదు",
+        desc: "ఈ చిత్రం మొక్క లేదా పత్తి ఆకు లాగా కనిపించడం లేదు.",
+        cause: "మా AI ఈ చిత్రం తప్పుగా ఉన్నట్లు గుర్తించింది.",
+        treatment: "దయచేసి పత్తి ఆకు యొక్క స్పష్టమైన చిత్రాన్ని అప్‌లోడ్ చేయండి."
+      }
+    }
   },
 
   // ─────────────────────────────────────────────────────────────
-  // HINDI (हिन्दी)
+  // HINDI
   // ─────────────────────────────────────────────────────────────
   hi: {
     nav_diagnose: "निदान",
-    nav_diseases: "बीमारियाँ",
+    nav_diseases: "बीमारियां",
     nav_history: "इतिहास",
-    nav_about: "जानकारी",
+    nav_about: "हमारे बारे में",
     model_ready: "मॉडल तैयार",
-    model_not_loaded: "मॉडल नहीं",
+    model_not_loaded: "मॉडल नहीं है",
 
     hero_tag: "🤖 डीप लर्निंग · EfficientNetB3",
-    hero_title_1: "AI-संचालित कपास पत्ती",
-    hero_title_2: "रोग पहचान",
-    hero_sub: "कपास की पत्ती की फोटो अपलोड करें और AI-संचालित रोग निदान, विश्वास स्कोर और उपचार सिफारिशें प्राप्त करें।",
-    stat_classes: "रोग वर्ग",
-    stat_accuracy: "परीक्षण सटीकता",
-    stat_realtime: "रियल-टाइम",
-    stat_prediction: "भविष्यवाणी",
+    hero_title_1: "AI-संचालित कपास की पत्ती",
+    hero_title_2: "रोग की पहचान",
+    hero_sub: "AI-संचालित रोग निदान और उपचार सिफ़ारिशें प्राप्त करने के लिए कपास की पत्ती की तस्वीर अपलोड करें।",
+    stat_classes: "रोग श्रेणियाँ",
+    stat_accuracy: "सटीकता",
+    stat_realtime: "वास्तविक समय",
+    stat_prediction: "अनुमान",
     hero_card_label: "AI विश्लेषण",
 
     upload_title: "पत्ती की छवि अपलोड करें",
-    upload_subtitle: "कपास की पत्ती की फोटो ड्रैग & ड्रॉप करें या चुनें (JPG, PNG, WebP)",
-    drop_text_strong: "अपनी छवि यहाँ ड्रैग & ड्रॉप करें",
+    upload_subtitle: "कपास की पत्ती की तस्वीर चुनने के लिए क्लिक करें",
+    drop_text_strong: "अपनी छवि को यहाँ खींचें और छोड़ें",
     drop_text_span: "या फ़ाइलें ब्राउज़ करने के लिए क्लिक करें",
-    drop_hint: "JPG · PNG · WebP · अधिकतम 16MB",
-    tip_1: "📸 स्पष्ट, अच्छी रोशनी वाली छवियाँ उपयोग करें",
-    tip_2: "🍃 सुनिश्चित करें कि पत्ती फ्रेम का अधिकांश भाग भरे",
-    tip_3: "🔍 धुंधली या अंधेरी फोटो से बचें",
-    tip_4: "📱 फोन कैमरा बिल्कुल ठीक काम करता है",
+    drop_hint: "समर्थित: JPG · PNG · WebP · Max 16MB",
+    tip_1: "📸 स्पष्ट, अच्छी रोशनी वाली छवियों का उपयोग करें",
+    tip_2: "🍃 सुनिश्चित करें कि पत्ती पूरी स्क्रीन पर हो",
+    tip_3: "🔍 धुंधली तस्वीरों से बचें",
+    tip_4: "📱 फोन का कैमरा भी ठीक से काम करता है",
     idle_text: "AI विश्लेषण शुरू करने के लिए कपास की पत्ती की छवि चुनें",
-    ready_text: "छवि विश्लेषण के लिए तैयार",
-    btn_analyze: "🔍 पत्ती का विश्लेषण करें",
+    ready_text: "छवि विश्लेषण के लिए तैयार है",
+    btn_start: "निदान शुरू करें →",
+    btn_analyze: "पत्ती का विश्लेषण करें",
     btn_analyzing: "विश्लेषण हो रहा है...",
-    ready_hint: "इसमें कुछ सेकंड लग सकते हैं",
-    btn_remove_title: "हटाएँ",
-    btn_camera: "📷 फोटो लें",
-    btn_capture: "📸 कैप्चर",
-    btn_close_camera: "✕ कैमरा बंद करें",
-
-    result_label: "परिणाम",
-    confidence_label: "विश्वास",
-    desc_heading: "📋 विवरण",
-    treatment_heading: "🩺 उपचार",
-    prevention_heading: "🛡️ रोकथाम",
-    chart_heading: "📊 सभी वर्ग संभावनाएँ",
-    top3_heading: "🏅 शीर्ष 3 भविष्यवाणियाँ",
-    btn_new: "🔄 एक और छवि का विश्लेषण करें",
-    btn_print: "🖨️ रिपोर्ट डाउनलोड करें",
-    history_title: "हाल के स्कैन",
-    history_empty: "कोई हालिया स्कैन नहीं मिला।",
-    btn_clear_history: "🗑️ इतिहास साफ़ करें",
-
-    error_default: "एक त्रुटि हुई",
+    btn_new: "नया निदान",
+    btn_print: "रिपोर्ट प्रिंट करें",
     btn_retry: "पुनः प्रयास करें",
-    err_invalid_image: "कृपया एक मान्य छवि फ़ाइल चुनें (JPG, PNG, WebP)।",
-    err_file_too_large: "फ़ाइल बहुत बड़ी है। अधिकतम आकार 16 MB है।",
-    err_network: "नेटवर्क त्रुटि। सुनिश्चित करें कि सर्वर चल रहा है और पुनः प्रयास करें।",
+    err_title: "निदान विफल रहा",
+    
+    res_title: "निदान पूर्ण",
+    res_conf: "आत्मविश्वास (CONFIDENCE)",
+    res_desc: "विवरण",
+    res_cause: "कारण",
+    res_treat: "उपचार एवं उपाय",
+    res_other: "अन्य संभावनाएं",
 
-    diseases_title: "पता लगाने योग्य बीमारियाँ",
-    diseases_subtitle: "हमारा मॉडल 7 कपास पत्ती की स्थितियों का पता लगाने के लिए प्रशिक्षित है",
-
-    about_title: "मॉडल के बारे में",
-    about_p1: "यह प्रणाली EfficientNetB3-आधारित डीप लर्निंग मॉडल का उपयोग करती है, जो कपास पत्ती रोग वर्गीकरण के लिए ट्रांसफर लर्निंग से फाइन-ट्यून किया गया है।",
-    about_p2: "मॉडल वास्तविक कृषि परिस्थितियों के लिए अनुकूलित है, जो कई रोग श्रेणियों में मजबूत प्रदर्शन सुनिश्चित करता है।",
-    spec_backbone: "बैकबोन",
-    spec_backbone_val: "EfficientNetB3",
-    spec_input: "इनपुट आकार",
-    spec_input_val: "224 × 224 RGB",
-    spec_classes: "वर्ग",
-    spec_classes_val: "7 रोग श्रेणियाँ",
-    spec_accuracy: "सटीकता",
-    spec_accuracy_val: "~98.7%",
-    arch_title: "आर्किटेक्चर",
-    arch_1: "📷 इनपुट छवि (224×224)",
-    arch_2: "🧠 EfficientNetV2L बैकबोन",
-    arch_3: "🔄 फाइन-ट्यून्ड लेयर्स",
-    arch_4: "📊 ग्लोबल एवरेज पूलिंग",
-    arch_5: "🔗 Dense(512) → Dense(256)",
-    arch_6: "🎯 7-वर्ग सॉफ्टमैक्स आउटपुट",
-
-    footer_built: "EfficientNetV2L से निर्मित · डीप लर्निंग-आधारित रोग पहचान प्रणाली",
-    footer_note: "कृषि अनुसंधान और प्रारंभिक रोग प्रबंधन के लिए",
+    hist_title: "हाल के निदान",
+    hist_empty: "अभी तक कोई निदान नहीं। अपना इतिहास देखने के लिए एक छवि अपलोड करें।",
+    
+    about_title: "CottonGreen AI के बारे में",
+    about_p1: "CottonGreen AI किसानों को कपास की पत्ती की बीमारियों को जल्दी पहचानने में मदद करने के लिए बनाया गया है।",
+    about_p2: "यह प्रोजेक्ट हजारों कपास के पत्तों पर प्रशिक्षित मॉडल का उपयोग करता है।",
+    foot_made: "सभी जगह कपास किसानों के लिए बनाया गया।",
+    
+    model_loading: "मॉडल लोड हो रहा है...",
+    error_network: "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।",
+    error_upload: "छवि को प्रोसेस करने में विफल।",
 
     diseases: {
+      "Aphids": {
+        name: "माहू (Aphids)",
+        desc: "छोटे रस चूसने वाले कीड़े जिसके कारण पत्तियां मुड़कर पीली पड़ जाती हैं।",
+        cause: "शुष्क, गर्म मौसम में एफिड्स का प्रकोप बढ़ जाता है।",
+        treatment: "नीम के तेल का प्रयोग करें। गंभीर होने पर इमिडाक्लोप्रिड का प्रयोग करें।"
+      },
+      "Army worm": {
+        name: "सैनिक कीट (Army Worm)",
+        desc: "कैटरपिलर जो पत्ती को खाते हैं, जिससे केवल कंकाल बचता है।",
+        cause: "कपास के पत्तों पर अंडे देने वाला स्पोडोप्टेरा कीट।",
+        treatment: "बैसिलस थुरिंजिएंसिस (Bt) या स्पिनोसैड लागू करें।"
+      },
       "Bacterial Blight": {
-        name: "बैक्टीरियल ब्लाइट",
-        severity: "उच्च",
-        severity_label: "उच्च जोखिम",
-        description: "Xanthomonas citri pv. malvacearum के कारण होता है। कपास की पत्तियों पर कोणीय पानी से भीगे घाव उत्पन्न करता है।",
-        treatment: "कॉपर-आधारित बैक्टीरिसाइड (कॉपर ऑक्सीक्लोराइड) लगाएँ। संक्रमित पौधों के अवशेषों को तुरंत हटाकर नष्ट करें।",
-        prevention: "प्रमाणित रोग-मुक्त बीजों का उपयोग करें, हर 2-3 सीज़न में फसल चक्र अपनाएँ, ऊपरी सिंचाई से बचें।",
-        card_desc: "Xanthomonas बैक्टीरिया से होने वाले कोणीय पानी से भीगे घाव",
+        name: "बैक्टीरियल ब्लाइट (Bacterial Blight)",
+        desc: "पत्तियों पर काले पानी से लथपथ कोणीय धब्बे।",
+        cause: "बारिश के छींटों या संक्रमित बीजों के माध्यम से फैलने वाला बैक्टीरिया।",
+        treatment: "तांबे आधारित कवकनाशी (Fungicides) लागू करें।"
       },
-      "Curl Virus": {
-        name: "कर्ल वायरस",
-        severity: "बहुत उच्च",
-        severity_label: "बहुत उच्च जोखिम",
-        description: "सफेद मक्खी Bemisia tabaci द्वारा फैलने वाला कॉटन लीफ कर्ल डिजीज (CLCuD)। गंभीर पत्ती मुड़ना और विकास रुकना।",
-        treatment: "संक्रमण के बाद कोई इलाज नहीं। सफेद मक्खी वेक्टर को नियंत्रित करने के लिए इमिడాक्लोप्रिड या थायमेथोक्साम लगाएँ।",
-        prevention: "CLCuD-प्रतिरोधी किस्में लगाएँ, संक्रमित पौधों को जल्दी हटाएँ, पीले चिपचिपे जाल लगाएँ।",
-        card_desc: "सफेद मक्खी द्वारा फैले CLCuD से गंभीर पत्ती मुड़ना",
-      },
-      "Fusarium Wilt": {
-        name: "फ्यूसेरियम विल्ट",
-        severity: "उच्च",
-        severity_label: "उच्च जोखिम",
-        description: "Fusarium oxysporum f. sp. vasinfectum के कारण मिट्टी से फैलने वाला कवक रोग। संवहनी मुरझाने का कारण बनता है।",
-        treatment: "कोई प्रभावी रासायनिक उपचार नहीं। संक्रमित पौधों को हटाएँ और मिट्टी का सोलराइजेशन करें।",
-        prevention: "प्रतिरोधी किस्मों का उपयोग करें, फसल चक्र अपनाएँ, मिट्टी की सेहत बनाए रखें।",
-        card_desc: "संवहनी मुरझाने का कारण बनने वाला मिट्टी से फैलने वाला कवक रोग",
-      },
-      "Healthy Leaf": {
-        name: "स्वस्थ पत्ती",
-        severity: "कोई नहीं",
-        severity_label: "कोई जोखिम नहीं",
-        description: "कोई बीमारी नहीं पाई गई। कपास की पत्ती सामान्य रंग और संरचना के साथ स्वस्थ दिखती है।",
-        treatment: "कोई उपचार आवश्यक नहीं। वर्तमान कृषि प्रबंधन प्रथाओं को जारी रखें।",
-        prevention: "संतुलित NPK उर्वरक, हर 7-10 दिनों में नियमित स्काउटिंग, उचित सिंचाई अनुसूची बनाए रखें।",
-        card_desc: "सामान्य, रोग-मुक्त, अच्छी स्थिति में कपास की पत्ती",
-      },
-      "Herbicide Growth Damage": {
-        name: "हर्बिसाइड नुकसान",
-        severity: "मध्यम",
-        severity_label: "मध्यम जोखिम",
-        description: "हर्बिसाइड ड्रिफ्ट, अत्यधिक प्रयोग या अवशेष विषाक्तता के कारण असामान्य पत्ती वृद्धि और विकृति।",
-        treatment: "मिट्टी को पानी से अच्छी तरह धोएँ। 48 घंटे के भीतर पता चलने पर जड़ों के चारों ओर एक्टिवेटेड चारकोल लगाएँ।",
-        prevention: "स्प्रेयर को सही ढंग से कैलिब्रेट करें, हवा वाले दिनों में स्प्रे न करें, खेतों के चारों ओर बफर ज़ोन रखें।",
-        card_desc: "हर्बिसाइड ड्रिफ्ट या गलत प्रयोग से वृद्धि विकृति",
-      },
-      "Leaf Hopper Jassids": {
-        name: "लीफ हॉपर जैसिड्स",
-        severity: "मध्यम",
-        severity_label: "मध्यम जोखिम",
-        description: "Amrasca biguttula biguttula से पत्ती का पीलापन, कांस्य रंग और ऊपर की ओर मुड़ना।",
-        treatment: "इमिडाक्लोप्रिड 17.8 SL (0.5 ml/L) या लैम्ब्डा-साइहैलोथ्रिन स्प्रे करें। विकल्प के रूप में नीम तेल (3%) लगाएँ।",
-        prevention: "प्राकृतिक शिकारियों (Chrysoperla) को प्रवेश कराएँ, पीले चिपचिपे जाल का उपयोग करें, प्रतिरोधी किस्में लगाएँ।",
-        card_desc: "जैसिड कीट के खाने से पत्ती का पीलापन और कांस्य रंग",
+      "Healthy": {
+        name: "स्वस्थ कपास (Healthy)",
+        desc: "रोग या कीट के संक्रमण का कोई दिखाई देने वाला संकेत नहीं।",
+        cause: "अच्छी फसल प्रबंधन।",
+        treatment: "वर्तमान सिंचाई और पोषक तत्वों का शेड्यूल बनाए रखें।"
       },
       "Leaf Redding": {
-        name: "पत्ती का लाल होना",
-        severity: "कम–मध्यम",
-        severity_label: "कम–मध्यम",
-        description: "पोटैशियम या मैग्नीशियम की कमी, या शारीरिक तनाव के कारण कपास की पत्तियों का लाल होना।",
-        treatment: "प्रति एकड़ 20 किलो पोटैशियम सल्फेट (SOP) डालें। पत्तियों पर 1% KNO₃ घोल का फोलियर स्प्रे करें।",
-        prevention: "रोपण से पहले मिट्टी परीक्षण करें, मिट्टी का pH 6.0-7.0 बनाए रखें, संतुलित उर्वरक सुनिश्चित करें।",
-        card_desc: "पोटैशियम की कमी या तनाव से लाल रंग बदलना",
+        name: "पत्ती का लाल होना (Leaf Redding)",
+        desc: "पत्तियाँ किनारों से शुरू होकर लाल/बैंगनी रंग की हो जाती हैं।",
+        cause: "मैग्नीशियम की कमी या पानी का तनाव।",
+        treatment: "मैग्नीशियम सल्फेट फोलियर स्प्रे लागू करें।"
       },
-      "Leaf Variegation": {
-        name: "पत्ती वेरिगेशन",
-        severity: "मध्यम",
-        severity_label: "मध्यम जोखिम",
-        description: "वायरल संक्रमण या आनुवंशिक उत्परिवर्तन के कारण मोज़ेक जैसे रंग पैटर्न (पीले-हरे धब्बे)।",
-        treatment: "एफिड और सफेद मक्खी वेक्टर को नियंत्रित करें। फैलाव रोकने के लिए भारी संक्रमित पौधों को हटाएँ।",
-        prevention: "प्रमाणित वायरस-मुक्त बीज का उपयोग करें, रोग-मुक्त पौध लगाएँ, कीट वेक्टर को जल्दी नियंत्रित करें।",
-        card_desc: "वायरल संक्रमण या आनुवंशिकी से मोज़ेक रंग पैटर्न",
+      "Powdery Mildew": {
+        name: "पाउडरी मिल्ड्यू (Powdery Mildew)",
+        desc: "पत्ती की ऊपरी और निचली सतहों पर सफेद पाउडर जैसा फंगल विकास।",
+        cause: "उच्च आर्द्रता और गर्म तापमान में कवक का पनपना।",
+        treatment: "सल्फर आधारित कवकनाशी लागू करें।"
       },
-    },
-  },
+      "Target Spot": {
+        name: "टारगेट स्पॉट (Target Spot)",
+        desc: "पत्तियों पर गोलाकार धब्बे, जिससे पत्तियां समय से पहले गिर जाती हैं।",
+        cause: "पत्ती के लंबे समय तक गीले रहने के कारण।",
+        treatment: "पाइराक्लोस्ट्रोबिन (Pyraclostrobin) जैसे कवकनाशी लागू करें।"
+      },
+      "Not a Cotton Leaf": {
+        name: "कपास की पत्ती नहीं है",
+        desc: "यह छवि किसी पौधे या कपास के पत्ते की प्रतीत नहीं होती है।",
+        cause: "हमारे AI ने पता लगाया कि यह छवि सही नहीं है।",
+        treatment: "कृपया कपास के पत्ते की एक स्पष्ट तस्वीर अपलोड करें।"
+      }
+    }
+  }
+
 };
