@@ -141,21 +141,30 @@ def get_model():
 def _check_ood(img: Image.Image) -> dict:
     """
     Memory-efficient OOD check using Hugging Face Inference API (Free Tier).
-    Uses 0 local memory instead of loading another heavy Keras model.
+    If the API fails (e.g. DNS error or timeout), falls back to a lightweight
+    local MobileNetV2 model to prevent non-leaf images (like cars) from being diagnosed.
     """
+    PLANT_KEYWORDS = {
+        'leaf', 'plant', 'flower', 'tree', 'herb', 'shrub', 'vine', 'moss',
+        'fungus', 'mushroom', 'seed', 'petal', 'stem', 'grass', 'weed',
+        'cotton', 'daisy', 'rose', 'sunflower', 'tulip', 'orchid', 'lily',
+        'corn', 'wheat', 'hay', 'straw', 'garden', 'pot', 'planter',
+        'greenhouse', 'acorn', 'hip', 'fig', 'lemon', 'orange', 'banana',
+        'pineapple', 'strawberry', 'pomegranate', 'jackfruit', 'custard_apple',
+        'cardoon', 'artichoke', 'cabbage', 'broccoli', 'cauliflower',
+        'zucchini', 'cucumber', 'bell_pepper', 'agaric', 'ear', 'rapeseed',
+        'buckeye', 'coral_fungus', 'granny_smith',
+    }
+
+    # 1. Try Hugging Face API (0 RAM overhead)
     try:
         import requests
         import io
-        
-        # Convert image to JPEG bytes
         buf = io.BytesIO()
         img.copy().convert('RGB').resize((224, 224)).save(buf, format='JPEG')
         data = buf.getvalue()
         
-        # Use ViT ImageNet model on HF free inference API
         API_URL = "https://api-inference.huggingface.co/models/google/vit-base-patch16-224"
-        
-        # 2 second timeout to ensure max diagnosis time stays < 5 seconds
         response = requests.post(API_URL, data=data, timeout=2)
         
         if response.status_code == 200:
@@ -164,35 +173,56 @@ def _check_ood(img: Image.Image) -> dict:
                 top_label = result[0].get('label', '')
                 top_score = result[0].get('score', 0.0)
                 
-                PLANT_KEYWORDS = {
-                    'leaf', 'plant', 'flower', 'tree', 'herb', 'shrub', 'vine', 'moss',
-                    'fungus', 'mushroom', 'seed', 'petal', 'stem', 'grass', 'weed',
-                    'cotton', 'daisy', 'rose', 'sunflower', 'tulip', 'orchid', 'lily',
-                    'corn', 'wheat', 'hay', 'straw', 'garden', 'pot', 'planter',
-                    'greenhouse', 'acorn', 'hip', 'fig', 'lemon', 'orange', 'banana',
-                    'pineapple', 'strawberry', 'pomegranate', 'jackfruit', 'custard_apple',
-                    'cardoon', 'artichoke', 'cabbage', 'broccoli', 'cauliflower',
-                    'zucchini', 'cucumber', 'bell_pepper', 'mushroom', 'agaric',
-                    'ear', 'rapeseed', 'buckeye', 'coral_fungus',
-                }
-                
                 label_lower = top_label.lower()
-                # If the image is not a plant, flag it as OOD
                 if not any(kw in label_lower for kw in PLANT_KEYWORDS):
-                    # Clean up label (e.g. 'sports car, sport car' -> 'Sports Car')
                     human_label = top_label.split(',')[0].title()
                     return {
                         'is_ood': True, 
                         'ood_label': human_label, 
                         'ood_confidence': round(top_score * 100, 2)
                     }
-        else:
-            log.warning(f"HF API returned {response.status_code}: {response.text[:100]}")
-            
-        # If API fails, rate-limited, or it's a plant, let the main model handle it
-        return {'is_ood': False}
+                return {'is_ood': False}
     except Exception as e:
-        log.warning("HF API OOD check failed or timed out: %s", e)
+        log.warning("HF API OOD check failed (%s). Falling back to local MobileNetV2...", type(e).__name__)
+
+    # 2. Local Fallback (Lightweight MobileNetV2)
+    try:
+        global _ood_model
+        import tensorflow as tf
+        from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
+        
+        if _ood_model is None:
+            log.info("Loading local MobileNetV2 OOD fallback (14MB)...")
+            _ood_model = MobileNetV2(weights='imagenet')
+            
+        img_resized = img.copy().convert('RGB').resize((224, 224))
+        arr = preprocess_input(np.array(img_resized, dtype=np.float32))
+        tensor = np.expand_dims(arr, 0)
+        
+        probs = _ood_model.predict(tensor, verbose=0)
+        decoded = decode_predictions(probs, top=3)[0]
+        
+        is_plant = False
+        top_label = decoded[0][1].replace('_', ' ')
+        top_score = decoded[0][2]
+        
+        for _, label, prob in decoded:
+            label_lower = label.lower().replace('_', ' ')
+            if any(kw in label_lower for kw in PLANT_KEYWORDS):
+                is_plant = True
+                break
+                
+        if not is_plant:
+            return {
+                'is_ood': True, 
+                'ood_label': top_label.title(), 
+                'ood_confidence': round(float(top_score) * 100, 2)
+            }
+            
+        return {'is_ood': False}
+        
+    except Exception as e:
+        log.error("Local OOD fallback failed: %s", e)
         return {'is_ood': False}
 
 
