@@ -94,8 +94,20 @@ def load_model():
             original_input_init = keras.layers.InputLayer.__init__
             def safe_input_init(self, *args, **kwargs):
                 kwargs.pop("optional", None)
-                kwargs.pop("batch_shape", None)
-                original_input_init(self, *args, **kwargs)
+                batch_shape = kwargs.pop("batch_shape", None)
+                
+                if batch_shape is not None:
+                    try:
+                        # Try newer Keras style
+                        original_input_init(self, *args, batch_shape=batch_shape, **kwargs)
+                    except TypeError as e:
+                        # Fallback to Keras 2 style if batch_shape is unrecognized
+                        if "batch_shape" in str(e) or "unexpected keyword argument" in str(e).lower():
+                            original_input_init(self, *args, batch_input_shape=batch_shape, **kwargs)
+                        else:
+                            raise
+                else:
+                    original_input_init(self, *args, **kwargs)
             keras.layers.InputLayer.__init__ = safe_input_init
 
             custom_objects = {
