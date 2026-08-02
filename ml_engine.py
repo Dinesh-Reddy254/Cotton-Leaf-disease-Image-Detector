@@ -83,22 +83,22 @@ def load_model():
             import keras
             log.info("Loading model with Keras %s ...", keras.__version__)
 
-            from keras.layers import InputLayer, Dense
-            
-            class SafeInputLayer(InputLayer):
-                def __init__(self, *args, **kwargs):
-                    kwargs.pop("optional", None)
-                    kwargs.pop("batch_shape", None)
-                    super().__init__(*args, **kwargs)
+            # 1. Monkey-patch Dense.__init__ to gracefully ignore quantization_config
+            original_dense_init = keras.layers.Dense.__init__
+            def safe_dense_init(self, *args, **kwargs):
+                kwargs.pop("quantization_config", None)
+                original_dense_init(self, *args, **kwargs)
+            keras.layers.Dense.__init__ = safe_dense_init
 
-            class SafeDense(Dense):
-                def __init__(self, *args, **kwargs):
-                    kwargs.pop("quantization_config", None)
-                    super().__init__(*args, **kwargs)
+            # 2. Monkey-patch InputLayer.__init__ to gracefully ignore Keras 3 specifics
+            original_input_init = keras.layers.InputLayer.__init__
+            def safe_input_init(self, *args, **kwargs):
+                kwargs.pop("optional", None)
+                kwargs.pop("batch_shape", None)
+                original_input_init(self, *args, **kwargs)
+            keras.layers.InputLayer.__init__ = safe_input_init
 
             custom_objects = {
-                "InputLayer": SafeInputLayer,
-                "Dense": SafeDense,
                 "Functional": keras.Model,
             }
 
