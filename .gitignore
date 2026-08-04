@@ -31,4 +31,7 @@ model_training/outputs/
 
 .playwright/
 
-
+# Temporary images and scratch folders
+scratch/
+scratch_*.jpg
+image*.png
